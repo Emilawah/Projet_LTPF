@@ -13,19 +13,36 @@ type prog =
 
 (* Exercice 1.1.2 *)
 
-(*
-Grammaire :
+(* Grammaire : *)
 
-Var ::= 'a' | 'b' | 'c' | 'd'
-Cst ::= '0' | '1'
-Expr ::= Cst | Var
-If ::= 'i' '(' Var ')' '{' Prog '}' '{' Prog '}'
-While ::= 'w' '(' Var ')' '{' Prog '}'
-Seq ::= Instr ';' Instr
-Assign ::= Var ":=" Expr
-Instr ::= Skip | Assign | Seq | While | If
-Prog ::= Instr
+(*
+  Grammaire :
+
+  Var ::= 'a' | 'b' | 'c' | 'd'
+  Cst ::= 0 | 1
+  Expr ::= Cst | Var
+  Instr ::= Assign | Seq | If | While
+  Assign ::= Var ':' '=' Expr
+  Seq ::= Instr ';' Instr 
+  If ::= 'i' '(' Var ')' '{' Prog '}' '{' Prog '}'
+  While ::= 'w' '(' Var ')' '{' Prog '}'
+  Prog ::= Instr
 *)
 
 (* Exercice 1.1.3 *)
 
+(* On enlève la récursion gauche *)
+
+(*
+  Grammaire sans récursion gauche :
+
+  Var ::= 'a' | 'b' | 'c' | 'd'
+  Cst ::= 0 | 1
+  Expr ::= Cst | Var
+  Instr ::= Assign InstrSuite | If | While
+  InstrSuite ::= ';' Instr InstrSuite | ε
+  Assign ::= Var ':' '=' Expr
+  If ::= 'i' '(' Var ')' '{' Prog '}' '{' Prog '}'
+  While ::= 'w' '(' Var ')' '{' Prog '}'
+  Prog ::= Instr
+*)
