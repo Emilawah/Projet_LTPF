@@ -13,3 +13,19 @@ type prog =
 
 (* Exercice 1.1.2 *)
 
+(*
+Grammaire :
+
+Var ::= 'a' | 'b' | 'c' | 'd'
+Cst ::= '0' | '1'
+Expr ::= Cst | Var
+If ::= 'i' '(' Var ')' '{' Prog '}' '{' Prog '}'
+While ::= 'w' '(' Var ')' '{' Prog '}'
+Seq ::= Instr ';' Instr
+Assign ::= Var ":=" Expr
+Instr ::= Skip | Assign | Seq | While | If
+Prog ::= Instr
+*)
+
+(* Exercice 1.1.3 *)
+
