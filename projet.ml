@@ -1,3 +1,6 @@
+#use "analist.ml";;
+#use "anacomb.ml";;
+
 (* Exercice 1.1.1 *)
 
 type var = A | B | C | D;;
@@ -77,8 +80,26 @@ type instr =
     ST ::= '.' F ST | epsilon 
 *)
 
+(* PARTIE PRINCIPALE*)
 
+(*Exercice 2.1.1*)
 
+(*On va utiliser les fichiers analist.ml et anacomb.ml 
+  vu en cours pour pouvoir écrire notre analyseur syntaxique
+*)
+
+let p_Var = terminal 'a' -|  terminal 'b' -|  terminal 'c' -| terminal 'd';; 
+let p_Cst = terminal '0' -| terminal '1';;
+let p_Expr = p_Cst -| p_Var;;
+
+(*On utilise la récurrence mutuelle car certains 
+  NT ont besoin des autres NT de la grammaire*)
+let rec p_Instr l = l|> (p_Assign -| p_If -| p_While)
+and p_InstrSuite l = l |> ((terminal ';' --> p_Instr --> p_InstrSuite) -| epsilon)
+and p_Assign l = l |> (p_Var --> terminal ':' --> terminal '=' --> p_Expr)
+and p_If l = l |> (terminal 'i' --> terminal '(' --> p_Var --> terminal ')' --> terminal '{' --> p_Prog --> terminal '}' --> terminal '{' --> p_Prog --> terminal '}')
+and p_While l = l |> (terminal 'w' --> terminal '(' --> p_Var --> terminal ')' --> terminal '{' --> p_Prog --> terminal '}')
+and p_Prog l = l |> (p_Instr --> p_InstrSuite);;
 
 
 

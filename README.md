@@ -1,12 +1,17 @@
 # Projet_LTPF
 
+Auteur : Emilio STIEN & Kelig LE MARREC <br>
+Date : Novembre 2025 <br>
+
+--- 
+
 ## 1 - Préliminiaires théoriques
 
 ### 1.1.2 Définition et analyse d’un langage de programmation simple
 
 
 
-## WHILEb⁻⁻
+### WHILEb⁻⁻
 
 Une première Grammaire (récursive à gauche indirecte) : 
 
@@ -27,7 +32,7 @@ Une première Grammaire (récursive à gauche indirecte) :
     être une séquence qui elle même est constituée de suites d'instruction ect. <br>
 ==> On s'embarque dans une boucle infinie.
 
----
+
 
 ### 1.1.3 Grammaire non récursive à gauche 
 
@@ -45,7 +50,8 @@ Une première Grammaire (récursive à gauche indirecte) :
   * **Prog** ::= Instr InstrSuite <br>
 
 
-## WHILEb
+### WHILEb
+
 
 ### 1.1.4 Grammaire pour le langage WHILEb
 
@@ -61,10 +67,10 @@ Une première Grammaire (récursive à gauche indirecte) :
 * **T** ::= F ST<br>
 * **ST** ::= '.' F ST | epsilon <br>
 
---- 
-## 1.2 Sémantique Naturelle (SN)
 
-### 1.2.1 Règles SN pour If 
+### 1.2 Sémantique Naturelle (SN)
+
+#### 1.2.1 Règles SN pour If 
 
 | If true  | If false  |
 |----------|-----------|
@@ -73,3 +79,7 @@ Une première Grammaire (récursive à gauche indirecte) :
 -> Cette sémantique naturelle du If évalue l'expression depuis l'état initial s1. 
 - **true** : à partir de l'état s1, on aboutit à l'état final s2 en exécutant P.
 - **false** : à partir de l'état s1, on aboutit à l'état final s2 en exécutant Q'.
+
+--- 
+
+## 2 - Partie Principale
