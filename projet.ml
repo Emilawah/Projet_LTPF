@@ -102,4 +102,31 @@ and p_While l = l |> (terminal 'w' --> terminal '(' --> p_Var --> terminal ')' -
 and p_Prog l = l |> (p_Instr --> p_InstrSuite);;
 
 
+(*Exercice 2.1.2*)
+
+
+(*Quelques programmes*)
+let prog1 = list_of_string("");;
+let prog2 = list_of_string("a");;
+let prog3 = list_of_string("a:=0");;
+let prog4 = list_of_string("e:=0");;
+let prog5 = list_of_string("a:=1;b:=1;a:=b");;
+let prog5bis = list_of_string("a:=5;b:=2;a:=b");;
+let prog6 = list_of_string("a:=0;b:=1;i(b){c:=3}{d:=0}");;
+let prog7 = list_of_string("a:=1;b:=0;i(a){i(b){c:=1}{c:=0}}{d:=1}")
+let fibo = list_of_string("a:=1;b:=0;c:=0;w(a){d:=b;b:=a;a:=d}")
+let prog8 = list_of_string("a:=1;b:=1;c:=1;w(a){i(c){c:=0;a:=b}{b:=0;c:=a}}");;
+
+(*Tests*)
+
+let _ = try let _ = p_Prog prog1 in assert false with Echec -> ();;
+let _ = try let _ = p_Prog prog2 in assert false with Echec -> ();;
+let _ = assert(p_Prog prog3 = []);;
+let _ = try let _ = p_Prog prog4 in assert false with Echec -> ();;
+let _ = assert(p_Prog prog5 = []);;
+let _ = assert(p_Prog prog6 = [';'; 'i'; '('; 'b'; ')'; '{'; 'c'; ':'; '='; '3'; '}'; '{'; 'd'; ':'; '='; '0'; '}']);;
+let _ = assert(p_Prog prog7 = []);;
+let _ = assert(p_Prog fibo = []);;
+let _ = assert(p_Prog prog8 = []);;
+
 

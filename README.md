@@ -83,3 +83,36 @@ Une première Grammaire (récursive à gauche indirecte) :
 --- 
 
 ## 2 - Partie Principale
+
+### 2.1.1 Analyseur syntaxique dulangage WHILEb⁻⁻
+
+Pour implémenter la grammaire du langage WHILEb⁻⁻, nous avons
+réalisé un analyseur syntaxique à l'aide des fichiers analist et anacomb 
+vu en cours.
+
+Notre grammaire utilise des appels mutuels entre les différentes règles
+de la grammaire. On a utilisé le mot clé `and`.
+
+==> Si le parseur rencontre une erreur de syntaxe, il lève une exception sinon il renvoie une analist vide si le programme total donné est correct, ou une partie du programme (en liste de caractères) si le programme est partiellement correct.
+
+### 2.1.2 Tests
+
+Voir tests sur le fichier projet.ml.
+
+  
+  ```
+  Fibonnacci :
+
+    a:=1;
+    b:=0;
+    c:=0;
+    w(a){         ==> renvoie une char analist : []
+      d:=b;   
+      b:=a;
+      a:=d;
+     }
+  ```
+
+NB : Pour accepter toutes les varialbles de 'a' à 'z', on peut utiliser la fonction `terminal_cond` et avoir la condition : <br>
+
+`(fun c -> c >= 'a' && c <= 'z')`
