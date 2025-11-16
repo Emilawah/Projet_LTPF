@@ -115,4 +115,18 @@ Voir tests sur le fichier projet.ml.
 
 NB : Pour accepter toutes les varialbles de 'a' à 'z', on peut utiliser la fonction `terminal_cond` et avoir la condition : <br>
 
-`(fun c -> c >= 'a' && c <= 'z')`
+`(fun c -> c >= 'a' && c <= 'z')`.
+
+
+### 2.1.3 Analyseur syntaxique du langage WHILEb
+
+Fichier `projet.ml`.
+
+
+### 2.1.4 Ajouts de contraintes : espaces, indentations, retours lignes
+
+## 2.2 Éxécution d'un programme WHILEb
+
+
+
+

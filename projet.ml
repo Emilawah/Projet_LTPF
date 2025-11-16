@@ -64,7 +64,6 @@ type instr =
     Avec la grammaire fournie, nous avons de la récursivité gauche
     - Pour le NT E ->  E ::= E '+' T | T
     - Pour le NT T -> T ::= T '.' F | F
-    - Pour le NT F -> F ::= '!' F | A | '(' E ')'
 
     Une grammaire non récursive à gauche peut s'écrire :
 
@@ -130,3 +129,26 @@ let _ = assert(p_Prog fibo = []);;
 let _ = assert(p_Prog prog8 = []);;
 
 
+(*Exercice 2.1.3*)
+
+let p_V = terminal 'a' -|  terminal 'b' -|  terminal 'c' -| terminal 'd';;
+let p_C = terminal '0' -| terminal '1';;
+let p_A = p_V -| p_C;;
+let rec  p_E l = l |> (p_T --> p_SE)
+and p_SE l = l |> ((terminal '+' --> p_T --> p_SE) -| epsilon)
+and p_T l = l |> (p_F --> p_ST)
+and p_ST l = l |> ((terminal '.' --> p_F --> p_ST) -| epsilon)
+and p_F l = l |> ((terminal '!' --> p_F) -| p_A -| (terminal '(' --> p_E --> terminal ')'));;
+
+(*On reprend le langage du WHILEb⁻⁻ pour pouvoir utilser . + et ! dans les expressions*)
+let rec p_Instr l = l|> (p_Assign -| p_If -| p_While)
+and p_InstrSuite l = l |> ((terminal ';' --> p_Instr --> p_InstrSuite) -| epsilon)
+and p_Assign l = l |> (p_V --> terminal ':' --> terminal '=' --> p_E)
+and p_If l = l |> (terminal 'i' --> terminal '(' --> p_V --> terminal ')' --> terminal '{' --> p_Prog --> terminal '}' --> terminal '{' --> p_Prog --> terminal '}')
+and p_While l = l |> (terminal 'w' --> terminal '(' --> p_V --> terminal ')' --> terminal '{' --> p_Prog --> terminal '}')
+and p_Prog l = l |> (p_Instr --> p_InstrSuite);;
+
+(*On vérifie*)
+p_Prog (list_of_string("b:=(a+(b.0))+(!1)"));;
+p_Prog (list_of_string("a:=1;b:=(a+(b.0))+(!1);c:=1;w(a){i(c){c:=0;a:=!b+1.a}{b:=0+1+0.(a+b);c:=!!a}}"));;
+p_Prog (list_of_string("b:=0+a;!c:=b")) (*accepte que b:=0+a et renvoie le reste*)
