@@ -125,8 +125,26 @@ Fichier `projet.ml`.
 
 ### 2.1.4 Ajouts de contraintes : espaces, indentations, retours lignes
 
-## 2.2 Éxécution d'un programme WHILEb
+Le but de notre analyseur syntaxique est de pouvoir analyser des programmes avec des espaces, des indentations et des retours à la ligne.
 
+Pour cela, nous pouvons définir une règle `Esp` de notre grammaire en utilisant l'étoile de Kleene `*`.
 
+  * **Esp** ::= (' '  | '\n'  | '\t') * <br>
 
+  * **C** ::= Esp ('0' | '1') Esp<br>
+  * **V** ::= Esp ('a' |'b' | 'c' | 'd') Esp<br>
+  * **A** ::= C | V<br>
+  * **F** ::= Esp '!' Esp  F | A | Esp '(' Esp E Esp ')' Esp<br>
 
+  * **E** ::= T SE<br>
+  * **SE** ::= Esp '+' Esp T SE | epsilon<br>
+
+  * **T**  ::= F ST<br>
+  * **ST** ::= Esp '.' Esp F ST | epsilon <br>
+
+  * **Instr** ::=  Assign | If | While<br>
+  * **InstrSuite** ::= Esp ';' Esp Instr InstrSuite | epsilon<br>
+  * **Assign** ::= Var ':' '=' Expr<br>
+  * **If** ::= Esp 'i' Esp '(' Esp Var Esp ')' Esp '{' Esp Prog Esp '}' Esp '{' Esp Prog Esp '}' Esp<br>
+  * **While** ::= Esp 'w' Esp '(' Esp  Var Esp ')' Esp '{' Esp  Prog Esp '}' Esp<br>
+  * **Prog** ::= Esp Instr InstrSuite Esp <br>

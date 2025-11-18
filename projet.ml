@@ -151,4 +151,45 @@ and p_Prog l = l |> (p_Instr --> p_InstrSuite);;
 (*On vérifie*)
 p_Prog (list_of_string("b:=(a+(b.0))+(!1)"));;
 p_Prog (list_of_string("a:=1;b:=(a+(b.0))+(!1);c:=1;w(a){i(c){c:=0;a:=!b+1.a}{b:=0+1+0.(a+b);c:=!!a}}"));;
-p_Prog (list_of_string("b:=0+a;!c:=b")) (*accepte que b:=0+a et renvoie le reste*)
+p_Prog (list_of_string("b:=0+a;!c:=b"));; (*accepte que b:=0+a et renvoie le reste*)
+
+
+(*Exercice 2.1.4*)
+
+(*Ajouts de la règle pour avoir du blanc dans le code "Espace / Saut de ligne / Tabulation"*)
+let p_esp = star (terminal ' ' -| terminal '\t' -| terminal '\n');;
+let p_V = p_esp --> (terminal 'a' -|  terminal 'b' -|  terminal 'c' -| terminal 'd') --> p_esp;;
+let p_C = p_esp --> (terminal '0' -| terminal '1') --> p_esp;;
+let p_A = p_V -| p_C;;
+
+
+let rec  p_E l = l |> (p_T --> p_SE)
+and p_SE l = l |> ((p_esp --> terminal '+' --> p_esp --> p_T --> p_SE) -| epsilon)
+and p_T l = l |> (p_F --> p_ST)
+and p_ST l = l |> ((p_esp --> terminal '.' --> p_esp --> p_F --> p_ST) -| epsilon)
+and p_F l = l |> ((p_esp --> terminal '!' --> p_esp --> p_F) -| p_A -| (p_esp --> terminal '(' --> p_esp --> p_E --> p_esp --> terminal ')' --> p_esp));;
+
+
+(*On reprend le langage du WHILEb⁻⁻ pour pouvoir utilser . + et ! dans les expressions*)
+let rec p_Instr l = l|> (p_Assign -| p_If -| p_While)
+and p_InstrSuite l = l |> ((p_esp --> terminal ';' --> p_esp --> p_Instr --> p_InstrSuite) -| epsilon)
+and p_Assign l = l |> (p_V --> p_esp --> terminal ':' --> terminal '=' --> p_esp --> p_E)
+and p_If l = l |> (p_esp --> terminal 'i' --> p_esp --> terminal '(' --> p_esp --> p_V --> p_esp --> terminal ')' --> p_esp --> terminal '{' --> p_esp --> p_Prog --> p_esp --> terminal '}' --> p_esp --> terminal '{' --> p_esp--> p_Prog --> p_esp --> terminal '}' --> p_esp)
+and p_While l = l |> (p_esp --> terminal 'w' --> p_esp --> terminal '(' --> p_esp --> p_V --> p_esp --> terminal ')' --> p_esp --> terminal '{' --> p_esp --> p_Prog --> p_esp --> terminal '}' --> p_esp)
+and p_Prog l = l |> (p_esp --> p_Instr --> p_InstrSuite --> p_esp);;
+
+
+(*Test : on voit bien les indentations et espaces*)
+let _ = assert (p_Prog (list_of_string("
+                        a := 1;
+                        b := 0;
+                        c := a+(b.0)+(!1);
+                        w (a) {
+                            i (c) {
+                              c := 0+b.(0+c)    ;   a := b
+                            }{
+                              b := 0+1+1;
+                              c := !a
+                            }
+                        }
+")) = []);;
