@@ -3,7 +3,7 @@
 
 type var = A | B | C | D
 type expr =
-  | EConst of int          (* 0 ou 1 *)
+  | EConst of cst          (* 0 ou 1 *)
   | EVar of var            (* variables a, b, c, d *)
 type instr =
   | Skip
@@ -82,8 +82,8 @@ let prVar = terminal_res(function
 );;
 
 let prCst = terminal_res(function
-  |'0' -> Some 0
-  |'1' -> Some 1
+  |'0' -> Some Zero
+  |'1' -> Some Un 
   |_ -> None
 );;
 
@@ -136,6 +136,56 @@ and prWhile l = (
       terminal '}' -+> epsilon_res (While(v, p))
 ) l;;
 
+(* Exercice 2.1.2*)
 
+let prog_assign = "a:=1"
+let prog_seq    = "a:=1;b:=0"
+let prog_cond   = "i(a){b:=1}{c:=0}"
+let prog_loop   = "w(a){a:=0}"
+let prog_empty_else = "i(a){b:=1}{}" 
+let prog_nested = "w(a){b:=1;c:=0}"
+let prog_sujet = "a:=1;b:=1;c:=1;w(a){i(c){c:=0;a:=b}{b:=0;c:=a}}"
 
+let run_tests () =
+  let tests = [
+    ("Affectation", prog_assign);
+    ("Séquence",    prog_seq);
+    ("Condition",   prog_cond);
+    ("Boucle",      prog_loop);
+    ("Else vide",   prog_empty_else);
+    ("Imbrication", prog_nested);
+    ("Sujet",       prog_sujet);
+  ] in
+  
+  let executer (nom, code) =
+    Printf.printf "[%-15s] : " nom;
+    try
+      let input = list_of_string code in
+      match prProg input with
+      | (ast, []) -> print_endline "OK"
+      | _ -> print_endline "ECHEC (Incomplet)"
+    with Echec -> print_endline "ECHEC (Syntaxe)"
+  in
+  
+  print_endline "\n--- Lancement des tests ---";
+  List.iter executer tests;
+  print_endline "--- Terminé ---\n"
+;;
+
+run_tests ();;
+
+(* Exercice 1.1.4 *)
+
+(*
+C ::= '0' | '1'
+V ::= 'a' |'b' | 'c' | 'd'
+A ::= C | V
+F ::= '!' F | A | '(' E ')'
+E ::= T SE
+SE ::= '+' T SE | ε
+T ::= F ST
+ST ::= '.' F ST | ε
+*)
+
+(* Exercice 2.1.3 *)
 
