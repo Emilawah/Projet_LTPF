@@ -1,4 +1,3 @@
-#use "analist.ml";;
 #use "anacomb.ml";;
 
 (* Exercice 1.1.1 *)
@@ -52,7 +51,7 @@ type instr =
   Assign ::= Var ':' '=' Expr
   If ::= 'i' '(' Var ')' '{' Prog '}' '{' Prog '}'
   While ::= 'w' '(' Var ')' '{' Prog '}'
-  Prog ::= Instr InstrSuite 
+  Prog ::= Instr InstrSuite | epsilon
 
 *)
 
@@ -87,6 +86,9 @@ type instr =
   vu en cours pour pouvoir écrire notre analyseur syntaxique
 *)
 
+
+
+
 let p_Var = terminal 'a' -|  terminal 'b' -|  terminal 'c' -| terminal 'd';; 
 let p_Cst = terminal '0' -| terminal '1';;
 let p_Expr = p_Cst -| p_Var;;
@@ -98,7 +100,7 @@ and p_InstrSuite l = l |> ((terminal ';' --> p_Instr --> p_InstrSuite) -| epsilo
 and p_Assign l = l |> (p_Var --> terminal ':' --> terminal '=' --> p_Expr)
 and p_If l = l |> (terminal 'i' --> terminal '(' --> p_Var --> terminal ')' --> terminal '{' --> p_Prog --> terminal '}' --> terminal '{' --> p_Prog --> terminal '}')
 and p_While l = l |> (terminal 'w' --> terminal '(' --> p_Var --> terminal ')' --> terminal '{' --> p_Prog --> terminal '}')
-and p_Prog l = l |> (p_Instr --> p_InstrSuite);;
+and p_Prog l = l |> (p_Instr --> p_InstrSuite) -| epsilon;;
 
 
 (*Exercice 2.1.2*)
@@ -118,10 +120,10 @@ let prog8 = list_of_string("a:=1;b:=1;c:=1;w(a){i(c){c:=0;a:=b}{b:=0;c:=a}}");;
 
 (*Tests*)
 
-let _ = try let _ = p_Prog prog1 in assert false with Echec -> ();;
+let _ = assert(p_Prog prog1 = []);;
 let _ = try let _ = p_Prog prog2 in assert false with Echec -> ();;
 let _ = assert(p_Prog prog3 = []);;
-let _ = try let _ = p_Prog prog4 in assert false with Echec -> ();;
+let _ = assert(p_Prog prog4 = []);;
 let _ = assert(p_Prog prog5 = []);;
 let _ = assert(p_Prog prog6 = [';'; 'i'; '('; 'b'; ')'; '{'; 'c'; ':'; '='; '3'; '}'; '{'; 'd'; ':'; '='; '0'; '}']);;
 let _ = assert(p_Prog prog7 = []);;
@@ -146,7 +148,7 @@ and p_InstrSuite l = l |> ((terminal ';' --> p_Instr --> p_InstrSuite) -| epsilo
 and p_Assign l = l |> (p_V --> terminal ':' --> terminal '=' --> p_E)
 and p_If l = l |> (terminal 'i' --> terminal '(' --> p_V --> terminal ')' --> terminal '{' --> p_Prog --> terminal '}' --> terminal '{' --> p_Prog --> terminal '}')
 and p_While l = l |> (terminal 'w' --> terminal '(' --> p_V --> terminal ')' --> terminal '{' --> p_Prog --> terminal '}')
-and p_Prog l = l |> (p_Instr --> p_InstrSuite);;
+and p_Prog l = l |> (p_Instr --> p_InstrSuite) -| epsilon;;
 
 (*On vérifie*)
 p_Prog (list_of_string("b:=(a+(b.0))+(!1)"));;
@@ -176,7 +178,7 @@ and p_InstrSuite l = l |> ((p_esp --> terminal ';' --> p_esp --> p_Instr --> p_I
 and p_Assign l = l |> (p_V --> p_esp --> terminal ':' --> terminal '=' --> p_esp --> p_E)
 and p_If l = l |> (p_esp --> terminal 'i' --> p_esp --> terminal '(' --> p_esp --> p_V --> p_esp --> terminal ')' --> p_esp --> terminal '{' --> p_esp --> p_Prog --> p_esp --> terminal '}' --> p_esp --> terminal '{' --> p_esp--> p_Prog --> p_esp --> terminal '}' --> p_esp)
 and p_While l = l |> (p_esp --> terminal 'w' --> p_esp --> terminal '(' --> p_esp --> p_V --> p_esp --> terminal ')' --> p_esp --> terminal '{' --> p_esp --> p_Prog --> p_esp --> terminal '}' --> p_esp)
-and p_Prog l = l |> (p_esp --> p_Instr --> p_InstrSuite --> p_esp);;
+and p_Prog l = l |> (p_esp --> p_Instr --> p_InstrSuite --> p_esp) -| epsilon;;
 
 
 (*Test : on voit bien les indentations et espaces*)
@@ -193,3 +195,128 @@ let _ = assert (p_Prog (list_of_string("
                             }
                         }
 ")) = []);;
+
+(*------------------------------------------*)
+(*version avec une grammaire qui rend un AST*)
+(*------------------------------------------*)
+
+(*----------
+   Whileb⁻⁻
+------------*)
+
+let prVar = terminal_res(function
+  |'a' -> Some A
+  |'b' -> Some B
+  |'c' -> Some C
+  |'d' -> Some D
+  |_ -> None
+);;
+
+let prCst = terminal_res(function
+  |'0' -> Some 0
+  |'1' -> Some 1
+  |_ -> None
+);;
+
+let prExpr =
+  (prCst ++> fun c -> epsilon_res (EConst c))
+  +|
+  (prVar ++> fun v -> epsilon_res (EVar v))
+;;
+
+
+
+let rec prProg l = l|> (
+  prInstr ++> fun i -> 
+    prInstrSuite ++> fun s ->
+      epsilon_res(Seq(i,s))
+  +|
+  (epsilon_res Skip)
+)
+and prInstr l = l |> (
+      prAssign +| prIf +| prWhile
+)
+and prInstrSuite l = l|> (
+  (terminal ';' -+> prInstr ++> fun i -> 
+    prInstrSuite ++> fun s ->
+      epsilon_res(Seq(i, s))) 
+  +| 
+  (epsilon_res Skip)
+)
+and prAssign l = l |> (
+  prVar ++> fun v-> 
+    terminal ':' --> terminal '=' -+> prExpr ++> fun e -> 
+      epsilon_res(Assign(v,e))
+)
+and prIf l = l|>  (
+  terminal 'i' --> terminal '(' -+> prVar ++> fun v ->
+    terminal ')' --> terminal '{' -+> prProg ++> fun p1 ->
+      terminal '}' --> terminal '{' -+> prProg ++> fun p2 ->
+        terminal '}' -+> epsilon_res(If(v,p1,p2))
+)
+and prWhile l = l|> (
+        terminal 'w' --> terminal '(' -+> prVar ++> fun v -> 
+          terminal ')' --> terminal '{' -+> prProg ++> fun p ->
+            terminal '}' -+> epsilon_res(While(v,p))
+);;
+
+
+(*--------------
+      Whileb
+----------------*)
+let prV = terminal_res(function
+  |'a' -> Some A
+  |'b' -> Some B
+  |'c' -> Some C
+  |'d' -> Some D
+  |_ -> None
+);;
+
+let prC = terminal_res(function
+  |'0' -> Some 0
+  |'1' -> Some 1
+  |_ -> None
+);;
+
+let prA =
+  (prC ++> fun c -> epsilon_res (EConst c))
+  +|
+  (prV ++> fun v -> epsilon_res (EVar v))
+;;
+
+let rec prF l = l|> (
+  (terminal '!' -+> prF) 
+  +|
+  (prA)
+  +| (terminal '(' -+> prE ++> 
+    terminal ')' )
+)
+and prE l = l|> (
+  prT ++> fun t ->
+    prSE ++> fun s ->
+      epsilon_res(Seq(s,t))
+)
+and prSE l = l |> (
+  (terminal '+' -+> prT ++> fun t -> 
+    prSE ++> fun s -> 
+      epsilon_res(Seq(s,t)))
+  +|
+  (epsilon_res Skip)
+)
+and prT l = l |> (
+  prF ++> fun f ->
+    prST ++> fun s ->
+      epsilon_res(Seq(s,t))
+)
+and prST l = l |> (
+    (terminal '.' -+> prF ++> fun f -> 
+      prST ++> fun s -> 
+        epsilon_res(Seq(s,f)))
+  +|
+    (epsilon_res Skip)
+);;
+
+
+
+
+

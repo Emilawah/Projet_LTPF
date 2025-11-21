@@ -93,7 +93,7 @@ vu en cours.
 Notre grammaire utilise des appels mutuels entre les différentes règles
 de la grammaire. On a utilisé le mot clé `and`.
 
-==> Si le parseur rencontre une erreur de syntaxe, il lève une exception sinon il renvoie une analist vide si le programme total donné est correct, ou une partie du programme (en liste de caractères) si le programme est partiellement correct.
+==> Si le parseur rencontre une erreur de syntaxe, il lève une exception sinon il renvoie une ranalist vide si le programme total donné est correct, ou une partie du programme (en liste de caractères) si le programme est partiellement correct.
 
 ### 2.1.2 Tests
 
