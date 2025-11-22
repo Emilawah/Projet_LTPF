@@ -4,8 +4,10 @@
 
 type var = A | B | C | D;;
 
+type cst = Zero | Un;;
+
 type expr = 
-|EConst of int (*0 ou 1*)
+|EConst of cst (*0 ou 1*)
 |EVar of var;; (*variables a b c ou d*)
 
 type instr = 
@@ -121,9 +123,9 @@ let prog8 = list_of_string("a:=1;b:=1;c:=1;w(a){i(c){c:=0;a:=b}{b:=0;c:=a}}");;
 (*Tests*)
 
 let _ = assert(p_Prog prog1 = []);;
-let _ = try let _ = p_Prog prog2 in assert false with Echec -> ();;
+let _ = assert(p_Prog prog2 = ['a']);;
 let _ = assert(p_Prog prog3 = []);;
-let _ = assert(p_Prog prog4 = []);;
+let _ = assert(p_Prog prog4 = ['e';':';'=';'0']);;
 let _ = assert(p_Prog prog5 = []);;
 let _ = assert(p_Prog prog6 = [';'; 'i'; '('; 'b'; ')'; '{'; 'c'; ':'; '='; '3'; '}'; '{'; 'd'; ':'; '='; '0'; '}']);;
 let _ = assert(p_Prog prog7 = []);;
@@ -151,9 +153,9 @@ and p_While l = l |> (terminal 'w' --> terminal '(' --> p_V --> terminal ')' -->
 and p_Prog l = l |> (p_Instr --> p_InstrSuite) -| epsilon;;
 
 (*On vérifie*)
-p_Prog (list_of_string("b:=(a+(b.0))+(!1)"));;
-p_Prog (list_of_string("a:=1;b:=(a+(b.0))+(!1);c:=1;w(a){i(c){c:=0;a:=!b+1.a}{b:=0+1+0.(a+b);c:=!!a}}"));;
-p_Prog (list_of_string("b:=0+a;!c:=b"));; (*accepte que b:=0+a et renvoie le reste*)
+let test1 = p_Prog (list_of_string("b:=(a+(b.0))+(!1)"));;
+let test2 = p_Prog (list_of_string("a:=1;b:=(a+(b.0))+(!1);c:=1;w(a){i(c){c:=0;a:=!b+1.a}{b:=0+1+0.(a+b);c:=!!a}}"));;
+let test3 = p_Prog (list_of_string("b:=0+a;!c:=b"));; (*accepte que b:=0+a et renvoie le reste*)
 
 
 (*Exercice 2.1.4*)
@@ -213,23 +215,22 @@ let prVar = terminal_res(function
 );;
 
 let prCst = terminal_res(function
-  |'0' -> Some 0
-  |'1' -> Some 1
+  |'0' -> Some Zero
+  |'1' -> Some Un
   |_ -> None
 );;
 
 let prExpr =
   (prCst ++> fun c -> epsilon_res (EConst c))
   +|
-  (prVar ++> fun v -> epsilon_res (EVar v))
-;;
+  (prVar ++> fun v -> epsilon_res (EVar v));;
 
 
 
 let rec prProg l = l|> (
-  prInstr ++> fun i -> 
+  (prInstr ++> fun i -> 
     prInstrSuite ++> fun s ->
-      epsilon_res(Seq(i,s))
+      epsilon_res(Seq(i,s)))
   +|
   (epsilon_res Skip)
 )
@@ -264,6 +265,24 @@ and prWhile l = l|> (
 (*--------------
       Whileb
 ----------------*)
+
+
+
+type expr = 
+| EConst of cst 
+| EVar of var
+(* ajout de + - et ! *)
+| EPlus of expr * expr
+| EMult of expr * expr
+| ENot of expr;;
+
+type instr = 
+| Skip
+| Assign of var * expr
+| Seq of instr * instr
+| If of var * instr * instr
+| While of var * instr
+
 let prV = terminal_res(function
   |'a' -> Some A
   |'b' -> Some B
@@ -273,8 +292,8 @@ let prV = terminal_res(function
 );;
 
 let prC = terminal_res(function
-  |'0' -> Some 0
-  |'1' -> Some 1
+  |'0' -> Some Zero
+  |'1' -> Some Un
   |_ -> None
 );;
 
@@ -285,38 +304,82 @@ let prA =
 ;;
 
 let rec prF l = l|> (
-  (terminal '!' -+> prF) 
+  (terminal '!' -+> prF ++> fun f ->
+    epsilon_res(ENot f)) 
   +|
   (prA)
-  +| (terminal '(' -+> prE ++> 
-    terminal ')' )
+  +| (terminal '(' -+> prE ++> fun e ->
+    terminal ')' -+> epsilon_res e)
 )
 and prE l = l|> (
   prT ++> fun t ->
-    prSE ++> fun s ->
-      epsilon_res(Seq(s,t))
+    prSE t
 )
-and prSE l = l |> (
+and prSE e l = l |> (
   (terminal '+' -+> prT ++> fun t -> 
-    prSE ++> fun s -> 
-      epsilon_res(Seq(s,t)))
+    prSE (EPlus(e,t)))
   +|
-  (epsilon_res Skip)
+  (epsilon_res e)
 )
 and prT l = l |> (
   prF ++> fun f ->
-    prST ++> fun s ->
-      epsilon_res(Seq(s,t))
+    prST f
 )
-and prST l = l |> (
+and prST e l = l |> (
     (terminal '.' -+> prF ++> fun f -> 
-      prST ++> fun s -> 
-        epsilon_res(Seq(s,f)))
+      prST (EMult(e,f)))
   +|
-    (epsilon_res Skip)
+    (epsilon_res e)
+);;
+
+
+let rec pr_Prog l = l|> (
+  (pr_Instr ++> fun i -> 
+    pr_InstrSuite ++> fun s ->
+      epsilon_res(Seq(i,s)))
+  +|
+  (epsilon_res Skip)
+)
+and pr_Instr l = l |> (
+      pr_Assign +| pr_If +| pr_While
+)
+and pr_InstrSuite l = l|> (
+  (terminal ';' -+> pr_Instr ++> fun i -> 
+    pr_InstrSuite ++> fun s ->
+      epsilon_res(Seq(i, s))) 
+  +| 
+  (epsilon_res Skip)
+)
+and pr_Assign l = l |> (
+  prV ++> fun v-> 
+    terminal ':' --> terminal '=' -+> prE ++> fun e -> 
+      epsilon_res(Assign(v,e))
+)
+and pr_If l = l|>  (
+  terminal 'i' --> terminal '(' -+> prV ++> fun v ->
+    terminal ')' --> terminal '{' -+> pr_Prog ++> fun p1 ->
+      terminal '}' --> terminal '{' -+> pr_Prog ++> fun p2 ->
+        terminal '}' -+> epsilon_res(If(v,p1,p2))
+)
+and pr_While l = l|> (
+        terminal 'w' --> terminal '(' -+> prV ++> fun v -> 
+          terminal ')' --> terminal '{' -+> pr_Prog ++> fun p ->
+            terminal '}' -+> epsilon_res(While(v,p))
 );;
 
 
 
-
-
+let _ = assert(prE (list_of_string("(a+b).(!c)")) = (EMult(EPlus(EVar A, EVar B), ENot(EVar C)),[]));;
+let prog_test = "a:=1;b:=1;c:=1;w(a){i(c){c:=0;a:=b}{b:=0;c:=a}}" ;;
+let _ = assert(pr_Prog (list_of_string prog_test) = (Seq (Assign (A, EConst Un),
+    Seq (Assign (B, EConst Un),
+     Seq (Assign (C, EConst Un),
+      Seq
+       (While (A,
+         Seq
+          (If (C,
+            Seq (Assign (C, EConst Zero), Seq (Assign (A, EVar B), Skip)),
+            Seq (Assign (B, EConst Zero), Seq (Assign (C, EVar A), Skip))),
+          Skip)),
+       Skip)))),
+   []));;
