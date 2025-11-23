@@ -202,9 +202,13 @@ let _ = assert (p_Prog (list_of_string("
 (*version avec une grammaire qui rend un AST*)
 (*------------------------------------------*)
 
-(*----------
-   Whileb⁻⁻
-------------*)
+
+
+(*--------------------------------------------
+                   Whileb⁻⁻
+----------------------------------------------*)
+
+
 
 let prVar = terminal_res(function
   |'a' -> Some A
@@ -262,9 +266,9 @@ and prWhile l = l|> (
 );;
 
 
-(*--------------
-      Whileb
-----------------*)
+(*--------------------------------------------
+                   Whileb
+----------------------------------------------*)
 
 
 
@@ -383,3 +387,125 @@ let _ = assert(pr_Prog (list_of_string prog_test) = (Seq (Assign (A, EConst Un),
           Skip)),
        Skip)))),
    []));;
+
+
+(* Partie 2.1.4 version ranalist *)
+
+let p_esp = star (terminal ' ' -| terminal '\t' -| terminal '\n');;
+let pr_V = p_esp -+> (terminal_res(function
+  |'a' -> Some A
+  |'b' -> Some B
+  |'c' -> Some C
+  |'d' -> Some D
+  |_ -> None
+)) ++> fun v -> p_esp -+> epsilon_res v;;
+
+let pr_C = p_esp -+> (terminal_res(function
+  |'0' -> Some Zero
+  |'1' -> Some Un
+  |_ -> None
+)) ++> fun c -> p_esp -+> epsilon_res c;;
+
+let pr_A =
+  (pr_C ++> fun c -> epsilon_res (EConst c))
+  +|
+  (pr_V ++> fun v -> epsilon_res (EVar v))
+;;
+
+
+let rec pr_F l = l|> (
+  (terminal '!' --> p_esp -+> pr_F ++> fun f ->
+    epsilon_res(ENot f)) 
+  +|
+  (pr_A)
+  +| (p_esp --> terminal '(' --> p_esp -+> pr_E ++> fun e ->
+    p_esp --> terminal ')' --> p_esp -+> epsilon_res e)
+)
+and pr_E l = l|> (
+  pr_T ++> fun t ->
+    pr_SE t
+)
+and pr_SE e l = l |> (
+  (p_esp --> terminal '+' --> p_esp -+> pr_T ++> fun t -> 
+    pr_SE (EPlus(e,t)))
+  +|
+  (epsilon_res e)
+)
+and pr_T l = l |> (
+  pr_F ++> fun f ->
+    pr_ST f
+)
+and pr_ST e l = l |> (
+    (p_esp --> terminal '.' --> p_esp -+> prF ++> fun f -> 
+      pr_ST (EMult(e,f)))
+  +|
+    (epsilon_res e)
+);;
+
+let rec pr2_Prog l = l|> (
+  p_esp -+> (
+    (pr2_Instr ++> fun i -> 
+      pr2_InstrSuite ++> fun s ->
+        epsilon_res(Seq(i,s))) 
+  +|
+  (epsilon_res Skip)
+  ) 
+)
+and pr2_Instr l = l |> (
+      pr2_Assign +| pr2_If +| pr2_While
+)
+and pr2_InstrSuite l = l|> (
+  (p_esp --> terminal ';' --> p_esp -+> pr2_Instr ++> fun i -> 
+    pr2_InstrSuite ++> fun s ->
+      epsilon_res(Seq(i, s)))
+  +| 
+  (epsilon_res Skip)
+)
+and pr2_Assign l = l |> (
+  pr_V ++> fun v-> 
+    terminal ':' --> terminal '=' --> p_esp -+> pr_E ++> fun e -> 
+      epsilon_res(Assign(v,e))
+)
+and pr2_If l = l|>  (
+  p_esp --> terminal 'i' --> p_esp --> terminal '(' --> p_esp -+> pr_V ++> fun v ->
+    p_esp --> terminal ')' --> p_esp --> terminal '{' --> p_esp -+> pr2_Prog ++> fun p1 ->
+      p_esp --> terminal '}' --> p_esp --> terminal '{' --> p_esp -+> pr2_Prog ++> fun p2 ->
+        p_esp --> terminal '}' -+> epsilon_res(If(v,p1,p2))
+)
+and pr2_While l = l|> (
+        p_esp --> terminal 'w' --> p_esp --> terminal '(' --> p_esp -+> pr_V ++> fun v -> 
+          p_esp --> terminal ')' --> p_esp --> terminal '{' --> p_esp -+> pr2_Prog ++> fun p ->
+            p_esp --> terminal '}' --> p_esp -+> epsilon_res(While(v,p))
+);;
+
+
+let _ = assert (pr2_Prog (list_of_string("
+                        a := 1;
+                        b := 0;
+                        c := a+(b.0)+(!1);
+                        w (a) {
+                            i (c) {
+                              c := 0+b.(0+c)    ;   a := b
+                            }{
+                              b := 0+1+1;
+                              c := !a
+                            }
+                        }
+")) = (Seq (Assign (A, EConst Un),
+  Seq (Assign (B, EConst Zero),
+   Seq
+    (Assign (C,
+      EPlus (EPlus (EVar A, EMult (EVar B, EConst Zero)), ENot (EConst Un))),
+    Seq
+     (While (A,
+       Seq
+        (If (C,
+          Seq
+           (Assign (C,
+             EPlus (EConst Zero, EMult (EVar B, EPlus (EConst Zero, EVar C)))),
+           Seq (Assign (A, EVar B), Skip)),
+          Seq (Assign (B, EPlus (EPlus (EConst Zero, EConst Un), EConst Un)),
+           Seq (Assign (C, ENot (EVar A)), Skip))),
+        Skip)),
+     Skip)))),
+ []));;
