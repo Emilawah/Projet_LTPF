@@ -113,7 +113,7 @@ let prog1 = list_of_string("");;
 let prog2 = list_of_string("a");;
 let prog3 = list_of_string("a:=0");;
 let prog4 = list_of_string("e:=0");;
-let prog5 = list_of_string("a:=1;b:=1;a:=b");;
+let prog5 = list_of_string("a:=0;b:=1;a:=c");;
 let prog5bis = list_of_string("a:=5;b:=2;a:=b");;
 let prog6 = list_of_string("a:=0;b:=1;i(b){c:=3}{d:=0}");;
 let prog7 = list_of_string("a:=1;b:=0;i(a){i(b){c:=1}{c:=0}}{d:=1}")
@@ -272,20 +272,20 @@ and prWhile l = l|> (
 
 
 
-type expr = 
+type wexpr = 
 | EConst of cst 
 | EVar of var
 (* ajout de + - et ! *)
-| EPlus of expr * expr
-| EMult of expr * expr
-| ENot of expr;;
+| EPlus of wexpr * wexpr
+| EMult of wexpr * wexpr
+| ENot of wexpr;;
 
-type instr = 
+type winstr = 
 | Skip
-| Assign of var * expr
-| Seq of instr * instr
-| If of var * instr * instr
-| While of var * instr
+| Assign of var * wexpr
+| Seq of winstr * winstr
+| If of var * winstr * winstr
+| While of var * winstr;;
 
 let prV = terminal_res(function
   |'a' -> Some A
@@ -509,3 +509,106 @@ let _ = assert (pr2_Prog (list_of_string("
         Skip)),
      Skip)))),
  []));;
+
+
+
+(*Exercice 2.2.1 (avec les bons types de WHILEb⁻⁻)*)
+
+
+type state = var -> int;;
+
+let init_state (v:var) = 0;;
+
+let get (s:state) (v:var) : int = s v;;
+
+let update (s:state) (v:var) (n:int) : state = 
+  fun x -> if x = v then n else s x;;
+
+
+let evalE (e:expr) (s:state) : int = 
+  match e with
+  |EConst Zero -> 0 
+  |EConst Un -> 1
+  |EVar v -> get s v 
+
+  
+let rec evalI (i:instr) (s:state) : state = 
+  match i with
+  |Skip -> s
+  |Assign(v, e) -> update s v (evalE e s)
+  |Seq(i1, i2) -> evalI i2 (evalI i1 s)
+  |If(v ,i1, i2) -> if get s v = 1 then evalI i1 s else evalI i2 s
+  |While (v, i) -> if get s v = 1 
+                   then evalI (While(v, i)) (evalI i s) else s;;   
+  
+  
+(*Tests*)
+
+let run_test progs : state = 
+    match prProg progs with
+    |(i,[]) -> evalI i init_state;
+    |(_,reste) -> failwith ("Echec parsing.");;
+
+
+let print_res name_test s a' b' c' d' =
+  Printf.printf "\n--- %s ---\n" name_test;
+  Printf.printf "A = %d (Attendu: %d) -> %s\n" (get s A) a' (if get s A = a' then "OK" else "FAIL");
+  Printf.printf "B = %d (Attendu: %d) -> %s\n" (get s B) b' (if get s B = b' then "OK" else "FAIL");
+  Printf.printf "C = %d (Attendu: %d) -> %s\n" (get s C) c' (if get s C = c' then "OK" else "FAIL");
+  Printf.printf "D = %d (Attendu: %d) -> %s\n" (get s D) d' (if get s D = d' then "OK" else "FAIL");;
+
+
+
+
+
+(* 
+- prog3 = list_of_string("a:=0");;
+- prog5 = list_of_string("a:=1;b:=1;a:=b");;
+- prog7 = list_of_string("a:=1;b:=0;i(a){i(b){c:=1}{c:=0}}{d:=1}")
+- prog7 = list_of_string("a:=1;b:=0;i(a){i(b){c:=1}{c:=0}}{d:=1}")
+- prog8 = list_of_string("a:=1;b:=1;c:=1;w(a){i(c){c:=0;a:=b}{b:=0;c:=a}}");;
+- fibo = list_of_string("a:=1;b:=0;c:=0;w(a){d:=b;b:=a;a:=d}") 
+*)
+
+
+let test_prog3 =
+  let code = prog3 in
+  let s = run_test code in 
+  print_res "Test prog3 : " s 0 0 0 0;;
+
+
+let test_prog5 =
+  let code = prog5 in
+  let s = run_test code in
+  print_res "Test prog5 : " s 0 1 0 0;;
+  
+
+let test_prog7 =
+  let code = prog7 in 
+  let s = run_test code in
+  print_res "Test prog7 : " s 1 0 0 0;;
+
+
+let test_prog8 =
+  let code = prog8 in
+  let s = run_test code in
+  print_res "Test prog8 : " s 0 0 0 0;;
+
+
+let test_prog_fibo =
+  let code = fibo in
+  let s = run_test code in
+  print_res "Test fibo" s 0 1 0 0;; 
+
+(*trace exec :
+s1 : A = 1 ; B = 0 ; C = 0 ; D = 0 (a:=1;b:=0;c:=0)
+s2 : A = 0 ; B = 1 ; C = 0 ; D = 0  (corps boucle : d:=b;b:=a;a:=d)
+s3 : A = 0 ; B = 1 ; C = 0 ; D = 0  (sorti de boucle (a=0) -> fin)
+*)
+
+
+
+
+
+                
+
