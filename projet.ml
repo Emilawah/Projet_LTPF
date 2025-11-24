@@ -2,9 +2,13 @@
 (* Exercice 1.1.1 *)
 
 type var = A | B | C | D
+type cst = Zero | Un
 type expr =
   | EConst of cst          (* 0 ou 1 *)
   | EVar of var            (* variables a, b, c, d *)
+  | EOr of expr * expr    (* Pour + *)
+  | EAnd of expr * expr   (* Pour . *)
+  | ENot of expr          (* Pour ! *)
 type instr =
   | Skip
   | Assign of var * expr
@@ -179,8 +183,8 @@ run_tests ();;
 (*
 C ::= '0' | '1'
 V ::= 'a' |'b' | 'c' | 'd'
-A ::= C | V
-F ::= '!' F | A | '(' E ')'
+A ::= C | V | '(' E ')'
+F ::= '!' F | A
 E ::= T SE
 SE ::= '+' T SE | ε
 T ::= F ST
@@ -189,3 +193,101 @@ ST ::= '.' F ST | ε
 
 (* Exercice 2.1.3 *)
 
+let prCst = terminal_res (function
+  | '0' -> Some Zero 
+  | '1' -> Some Un 
+  | _ -> None
+);;
+
+let prVar = terminal_res(function
+  |'a' -> Some A
+  |'b' -> Some B
+  |'c' -> Some C
+  |'d' -> Some D
+  |_ -> None
+);;
+
+let rec prExpr l = (
+  prTerm ++> fun t -> prSE t
+) l
+
+and prSE arg l = (
+  (terminal '+' -+> prTerm ++> fun t ->
+    prSE (EOr(arg,t)))
+  +|
+  epsilon_res(arg)
+) l
+
+and prTerm l = (
+  prFactor ++> fun f -> prST f
+) l 
+
+and prST arg l = (
+  (terminal '.' -+> prFactor ++> fun f ->
+    prST(EAnd(arg,f)))
+  +|
+  epsilon_res(arg)
+) l
+
+and prFactor l = (
+  (terminal '!' -+> prFactor ++> fun f -> epsilon_res (ENot f))
+  +| 
+  prAtom
+) l
+
+and prAtom l = (
+  (prCst ++> fun c -> epsilon_res (EConst c))
+  +|
+  (prVar ++> fun v -> epsilon_res (EVar v))
+  +|
+  (terminal '(' -+> prExpr ++> fun e -> terminal ')' -+> epsilon_res e)
+) l
+
+and prProg l = (
+  (prInstr ++> fun i -> prInstrSuite ++> fun s -> epsilon_res(Seq(i,s)))
+  +| (epsilon_res Skip)
+) l
+
+and prInstr l = (prAssign +| prIf +| prWhile) l
+
+and prInstrSuite l = (
+  (terminal ';' -+> prInstr ++> fun i -> prInstrSuite ++> fun s -> epsilon_res(Seq(i, s)))
+  +| (epsilon_res Skip)
+) l
+
+and prAssign l = (
+  prVar ++> fun v ->
+    terminal ':' --> terminal '=' -+> prExpr ++> fun e ->
+      epsilon_res(Assign(v,e))
+) l
+
+and prIf l = (
+  terminal 'i' --> terminal '(' -+> prVar ++> fun v ->
+    terminal ')' --> terminal '{' -+> prProg ++> fun p1 ->
+      terminal '}' --> terminal '{' -+> prProg ++> fun p2 ->
+        terminal '}' -+> epsilon_res (If(v, p1, p2))
+) l
+
+and prWhile l = (
+  terminal 'w' --> terminal '(' -+> prVar ++> fun v ->
+    terminal ')' --> terminal '{' -+> prProg ++> fun p ->
+      terminal '}' -+> epsilon_res (While(v, p))
+) l;;
+
+(* Tests *)
+
+let test s = 
+  Printf.printf "Test [%-15s] : " s;
+  try match prProg (list_of_string s) with
+    | (res, []) -> print_endline "OK"
+    | _ -> print_endline "ECHEC (Reste non vide)"
+  with Echec -> print_endline "ECHEC (Syntaxe)"
+;;
+
+test "a:=b+c";;        (* OU *)
+test "a:=b.c";;        (* ET *)
+test "a:=!b";;         (* NON *)
+test "a:=!(b+c)";;     (* Parenthèses et priorité *)
+test "a:=a+b.c";;      (* a + (b.c) *)
+
+(* Exercice 2.2.1 *)
