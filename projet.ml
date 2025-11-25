@@ -436,7 +436,7 @@ and pr_T l = l |> (
     pr_ST f
 )
 and pr_ST e l = l |> (
-    (p_esp --> terminal '.' --> p_esp -+> prF ++> fun f -> 
+    (p_esp --> terminal '.' --> p_esp -+> pr_F ++> fun f -> 
       pr_ST (EMult(e,f)))
   +|
     (epsilon_res e)
@@ -600,7 +600,7 @@ let test_prog_fibo =
   let s = run_test code in
   print_res "Test fibo" s 0 1 0 0;; 
 
-(*trace exec :
+(*Exemple trace exec avec fibo :
 s1 : A = 1 ; B = 0 ; C = 0 ; D = 0 (a:=1;b:=0;c:=0)
 s2 : A = 0 ; B = 1 ; C = 0 ; D = 0  (corps boucle : d:=b;b:=a;a:=d)
 s3 : A = 0 ; B = 1 ; C = 0 ; D = 0  (sorti de boucle (a=0) -> fin)
@@ -609,6 +609,117 @@ s3 : A = 0 ; B = 1 ; C = 0 ; D = 0  (sorti de boucle (a=0) -> fin)
 
 
 
+(* Exercice 2.2.2 *)
 
+let rec evalWexpr (e: wexpr) (s:state) : int =
+  match e with
+  |EConst Zero -> 0
+  |EConst Un -> 1
+  |EVar v -> get s v
+  |EPlus(e1,e2) -> 
+    let s1 = evalWexpr e1 s in
+    let s2 = evalWexpr e2 s in
+    if s1 = 1 || s2 = 1 then 1 else 0
+  |EMult(e1,e2) -> 
+    let s1 = evalWexpr e1 s in
+    let s2 = evalWexpr e2 s in
+    if s1 = 1 && s2 = 1 then 1 else 0
+  |ENot e -> if evalWexpr e s = 1 then 0 else 1;;
+
+
+let rec evalWInstr (i:winstr) (s:state) : state = 
+  match i with
+  |Skip -> s
+  |Assign(v,e) -> update s v (evalWexpr e s)
+  |Seq(i1,i2) -> evalWInstr i2 (evalWInstr i1 s)
+  |If(v,i1,i2) -> if get s v = 1 then evalWInstr i1 s else evalWInstr i2 s
+  |While(v,i) -> if get s v = 1 then evalWInstr (While(v,i)) (evalWInstr i s) else s;;
                 
 
+(*Tests*)
+
+let run_test_WHILEb progs : state = 
+    match pr2_Prog progs with
+    |(i,[]) -> evalWInstr i init_state
+    |(_,reste) -> failwith ("Echec parsing.");;
+
+    
+let _prog1 = list_of_string("
+    a := 1
+    ");;
+
+(*test des nouvelles expr*)
+let _prog2 = list_of_string("
+          a := (1+0) ;
+          b := 1.0 ;
+          c := !b
+    ");;
+    
+(* c'est le XOR ;) *)
+let _prog3 = list_of_string("
+    a := 1;
+    b := 1;
+    c := (a + b). !(a . b)
+");;    
+
+let _prog4 = (list_of_string("
+                        a := 1;
+                        b := 0;
+                        c := a+(b.0)+(!1);
+                        w (a) {
+                            i (c) {
+                              c := 0+b.( 0 + c )    ;   a := b
+                            }{
+                              b := 0+1+1;
+                              d := !a
+                            }
+                        }
+"));;
+
+(*erreur parsing à cause de '=' ; la valeur 7 et mauvais parenthésages*)
+let _prog5 = (list_of_string("
+                        a := 1;
+                        b := 0;
+                        c := a+(b.0)+(!1));
+                        w (a) {
+                            a = 1;
+                            b = 7
+                        }
+"));;
+
+let _prog6 = list_of_string("");;
+
+let test1 = let s = run_test_WHILEb _prog1 in
+  print_res "Test _prog1 : " s 1 0 0 0;;    
+
+let test2 = let s = run_test_WHILEb _prog2 in
+  print_res "Test _prog2 : " s 1 0 1 0;;
+
+let test3 = let s = run_test_WHILEb _prog3 in
+  print_res "Test _prog3 : " s 1 1 0 0;;
+
+let test4 = let s = run_test_WHILEb _prog4 in
+  print_res "Test _prog4 : " s 0 0 0 0;;
+
+(*Trace exec exemple pour _prog4 
+
+  - s1 : A = 1 ; B = 0 ; C = 1 ; D = 0   [ a:=1 b:=0 c := a+(b.0)+(!1) ]
+
+
+   - Entrée dans While(a) car A=1.
+   - Entrée dans If(c) car C=1 (Branche THEN).
+
+  - s2 : A = 1 ; B = 0 ; C = 0 ; D = 0   [ c := 0+b.( 0 + c ) ]
+
+  - s3 : A = 0 ; B = 0 ; C = 0 ; D = 0   [ a := b ]
+        
+   - Sortie du While(a) car A=0.
+
+   - s4 : A = 0 ; B = 0 ; C = 0 ; D = 0
+*)
+
+let test5 = let s = run_test_WHILEb _prog5 in
+  print_res "Test _prog5 : " s 0 0 0 0;;
+
+let test6 = let s = run_test_WHILEb _prog6 in
+  print_res "Test _prog6 : " s 1 1 1 1;; (* fail car les états sont init a 0 au départ *)
