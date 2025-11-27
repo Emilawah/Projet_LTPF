@@ -291,3 +291,85 @@ test "a:=!(b+c)";;     (* Parenthèses et priorité *)
 test "a:=a+b.c";;      (* a + (b.c) *)
 
 (* Exercice 2.2.1 *)
+
+type state = var -> cst
+
+let init_state (v : var) : cst = Zero
+
+let update (s : state) (v : var) (c : cst) : state =
+  fun x -> if x = v then c else s x
+
+let plus c1 c2 =
+  match c1, c2 with
+  | Zero, Zero -> Zero
+  | _ -> Un
+
+let mult c1 c2 =
+  match c1, c2 with
+  | Un, Un -> Un
+  | _ -> Zero
+
+let neg c =
+  match c with
+  | Zero -> Un
+  | Un -> Zero
+
+let rec eval (e : expr) (s : state) : cst =
+  match e with
+  | EConst c -> c
+  | EVar v -> s v
+  | EOr (e1, e2) -> plus (eval e1 s) (eval e2 s)
+  | EAnd (e1, e2) -> mult (eval e1 s) (eval e2 s)
+  | ENot e1 -> neg (eval e1 s)
+
+let rec exec (i : instr) (s : state) : state =
+  match i with
+  | Skip -> s
+  | Assign (v, e) -> update s v (eval e s)
+  | Seq (i1, i2) -> exec i2 (exec i1 s)
+  | If (v, i1, i2) -> 
+      if s v = Un then exec i1 s else exec i2 s
+  | While (v, body) ->
+      if s v = Un then
+        let s_after = exec body s in
+        exec (While (v, body)) s_after
+      else
+        s
+
+(* Exercice 2.2.2 *)
+
+let string_of_cst = function
+  | Zero -> "0"
+  | Un -> "1"
+
+let print_state s =
+  Printf.printf "A=%s, B=%s, C=%s, D=%s\n" 
+    (string_of_cst (s A)) 
+    (string_of_cst (s B)) 
+    (string_of_cst (s C)) 
+    (string_of_cst (s D))
+
+let run_prog code =
+  Printf.printf "Programme : %s\n" code;
+  try
+    let input = list_of_string code in
+    match prProg input with
+    | (ast, []) -> 
+        let final_state = exec ast init_state in
+        print_state final_state
+    | _ -> print_endline "Erreur : Reste non vide après analyse"
+  with Echec -> print_endline "Erreur : Syntaxe incorrecte"
+
+let () =
+  print_endline "--- Tests Exécution (Sans Int) ---";
+  run_prog "a:=1";
+  run_prog "a:=1;b:=a+0";
+  run_prog "a:=1;b:=!a";
+  run_prog "a:=1;i(a){b:=1}{b:=0}";
+  run_prog "a:=1;w(a){b:=b+1;a:=0}";
+  run_prog "a:=1;b:=0;c:=(a+b).!(a.b)";
+  run_prog "a:=1;b:=1;c:=(a+b).!(a.b)";
+  run_prog "a:=1;b:=0;i(a){i(b){c:=0}{c:=1}}{c:=0}";
+  run_prog "a:=1;b:=0;c:=a;a:=b;b:=c";
+  run_prog "a:=1;b:=1;c:=0;w(a){c:=c+b;b:=0;i(b){}{a:=0}}";
+  run_prog "a:=1;b:=1;c:=1;w(a){i(c){c:=0;a:=b}{b:=0;c:=a}}";
