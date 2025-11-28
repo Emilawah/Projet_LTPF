@@ -688,20 +688,24 @@ Proof.
                    | (* SN_While_false *) (* complétez ici NIVEAU 1 *)
                    | (* SN_While_true *)  (* complétez ici NIVEAU 1 *)
                    ].
-  - admit (** complétez ici NIVEAU 1 *).
-  - admit (** complétez ici NIVEAU 1 *).
-  - admit (** complétez ici NIVEAU 1 *).
-  - admit (** complétez ici NIVEAU 1 *).
-  - admit (** complétez ici NIVEAU 1 *).
-  - admit (** complétez ici NIVEAU 1 *).
-  - (** Le sous-but le plus intéressant, où les formulations diffèrent entre
-        SN' et SN *)
-    apply SN'_While_true.
-    + admit (** complétez ici NIVEAU 1 *).
+  - apply SN'_Skip.
+  - apply SN'_Assign.
+  - eapply SN'_Seq.
+    + apply hrec_sn1.
+    + apply hrec_sn2.
+  - apply SN'_If_true.
+    + apply e.
+    + apply hrec_sn.
+  - apply SN'_If_false.
+    + apply e.
+    + apply hrec_sn.
+  - apply SN'_While_false. apply H.
+  - apply SN'_While_true.
+    + apply H.
     + eapply SN'_Seq.
-      -- admit (** complétez ici NIVEAU 2 *).
-      -- admit (** complétez ici NIVEAU 2 *).
-Admitted.
+      * apply IHsn1.
+      * apply IHsn2.
+Qed.
 
 (** Pour la réciproque le script est semblable SAUF au dernier sous-but,
     qui précisément demande une inversion. *)
@@ -717,36 +721,24 @@ Proof.
                    | (* SN_While_true *)
                      cond i s s' e sn hrec_sn
                    ].
-  - admit (** complétez ici NIVEAU 1 *).
-  - admit (** complétez ici NIVEAU 1 *).
-  - admit (** complétez ici NIVEAU 1 *).
-  - admit (** complétez ici NIVEAU 1 *).
-  - admit (** complétez ici NIVEAU 1 *).
-  - admit (** complétez ici NIVEAU 1 *).
-  - (** NIVEAU 4 *)
-    (** Ici il faut exploiter l'hypothèse
-        hrec_sn : SN (Seq i (While cond i)) s s'
-        On observe que cette hypothèse est de la forme SN (Seq i1 i2) s s'
-        qui est un cas particulier de SN i s s' ;
-        cependant un destruct de hrec_sn oublierait que l'on est
-        dans ce cas particulier *)
-    destruct hrec_sn as [ | | | | | | ].
-    + (** Le but obtenu ici correspond au cas où
-          [Seq i (While cond i)] serait en même temps [Skip]
-          un cas qui est hors propos. *)
-      Undo 1.
-    Undo 1.
-    (** Cela est résolu en utilisant
-        conséquence de hrec_sn indiquée par inv_Seq.
-        Voir le mode d'emploi indiqué ci-dessus.
-     *)
-    destruct (inv_Seq hrec_sn) as [s1 sn1 sn2].
-    (** On termine en utilisant ici SN_While_true *)
-    + eapply SN_While_true.
-      -- apply e.
-      -- apply sn1.
-      -- apply sn2.
-Admitted.
+  - apply SN_Skip.
+  - apply SN_Assign.
+  - eapply SN_Seq.
+    + apply hrec_sn1.
+    + apply hrec_sn2.
+  - apply SN_If_true.
+    + apply e.
+    + apply hrec_sn.
+  - apply SN_If_false.
+    + apply e.
+    + apply hrec_sn.
+  - apply SN_While_false. apply e.
+  - destruct (inv_Seq hrec_sn).
+    eapply SN_While_true.
+    + apply e.
+    + apply H.
+    + apply H0.
+Qed.
 
 (* -------------------------------------------------------------------------- *)
 (** ** Le langage REPEAT *)
@@ -779,22 +771,45 @@ Inductive SNr: rinstr -> state -> state -> Prop :=
                     evalB b s = true -> SNr i1 s s1 -> SNr (RIf b i1 i2) s s1
 | SNr_If_false    : forall b i1 i2 s s2,
                     evalB b s = false -> SNr i2 s s2 -> SNr (RIf b i1 i2) s s2
-| SNr_Repeat_true : (** complétez ici NIVEAU 2 *)
-| SNr_Repeat_false: (** complétez ici NIVEAU 2 *)
+| SNr_Repeat_true : forall i b s s1,
+                    SNr i s s1 -> evalB b s1 = true -> SNr (Repeat i b) s s1
+| SNr_Repeat_false: forall i b s s1 s2,
+                    SNr i s s1 -> evalB b s1 = false -> SNr (Repeat i b) s1 s2 -> SNr (Repeat i b) s s2
 .
 
 (** On code dans REPEAT un programme P2 correspondant à
     repeat {i:=i-1;x:=1+x} until i=0 *)
 
-Definition corps_boucleR : rinstr. Admitted.
+Definition corps_boucleR : rinstr :=
+  RSeq (RAssign Il (Amo Ir N1)) (RAssign Xl (Apl N1 Xr)).
+
 Definition P2 := Repeat corps_boucleR (Beqnat Ir N0).
 
 Lemma P2_test : SNr P2 [2; 5] [0; 7].
 Proof.
-Admitted.
+  cbv. eapply SNr_Repeat_false.
+  - eapply SNr_Seq.
+    + apply SNr_Assign.
+    + apply SNr_Assign.
+  - cbn. reflexivity.
+  - apply SNr_Repeat_true. eapply SNr_Seq.
+    + apply SNr_Assign.
+    + apply SNr_Assign.
+    + cbn. reflexivity.
+Qed.
 
 (** À FAIRE : présenter P2_test sous forme d'arbre *)
 Definition AFAIRE_dessin_P2_test : unit.
+(*
+                                     SNr_Seq          (refl)
+                                   -----------      -----------
+                                   Body [1;6]..      Cond=true
+             SNr_Seq    (refl)    ----------------------------- SNr_Repeat_True
+           ----------- --------        SNr P2 [1;6] [0;7]
+           Body [2;5].. Cond=false             |
+    ----------------------------------------------------------- SNr_Repeat_False
+                      SNr P2 [2; 5] [0; 7]
+*)
 Admitted.
 
 
@@ -810,8 +825,9 @@ Fixpoint repeat_while (i:rinstr) : winstr :=
     match i with
     | RSkip        => Skip
     | RAssign v a  => Assign v a
-    | RSeq i1 i2   =>
-      (** complétez ici NIVEAU 2 *)
+    | RSeq i1 i2   => Seq (repeat_while i1) (repeat_while i2)
+    | RIf b i1 i2  => If b (repeat_while i1) (repeat_while i2)
+    | Repeat i b   => Seq (repeat_while i) (While (Bnot b) (repeat_while i))
     end.
 
 (** Avant d'aborder la preuve suivante, il est recommandé de tester
@@ -823,9 +839,30 @@ Fixpoint repeat_while (i:rinstr) : winstr :=
 
 Theorem repeat_while_correct : forall i s1 s2, SNr i s1 s2 -> SN (repeat_while i) s1 s2.
 Proof.
-  intros i s1 s2 sn.
-            (* complétez ici NIVEAU 3 *)
-Admitted.
+  intros i s1 s2 sn. induction sn.
+  - cbn. apply SN_Skip.
+  - cbn. apply SN_Assign.
+  - cbn. eapply SN_Seq.
+    + apply IHsn1.
+    + apply IHsn2.
+  - cbn. apply SN_If_true.
+    + apply H.
+    + apply IHsn.
+  - cbn. apply SN_If_false.
+    + apply H.
+    + apply IHsn.
+  - cbn. eapply SN_Seq.
+    + apply IHsn.
+    + eapply SN_While_false.
+      * cbn. rewrite H. cbn. reflexivity.
+  - cbn. eapply SN_Seq.
+    + apply IHsn1.
+    + apply inv_Seq in IHsn2. destruct IHsn2.
+      eapply SN_While_true.
+      * cbn. rewrite H. cbn. reflexivity.
+      * apply H0.
+      * apply H1.
+Qed.
 
 (* -------------------------------------------------------------------------- *)
 (** Transformation inverse *)
@@ -833,8 +870,9 @@ Fixpoint while_repeat (i:winstr) : rinstr :=
     match i with
     | Skip        => RSkip
     | Assign v a  => RAssign v a
-    | Seq i1 i2   =>
-      (* complétez ici NIVEAU 3 *)
+    | Seq i1 i2   => RSeq (while_repeat i1) (while_repeat i2)
+    | If b i1 i2  => RIf b (while_repeat i1) (while_repeat i2) 
+    | While b i   => Repeat (while_repeat i) b 
     end.
 
 (** Avant d'aborder la preuve suivante, il est recommandé de tester
