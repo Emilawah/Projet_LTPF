@@ -872,7 +872,7 @@ Fixpoint while_repeat (i:winstr) : rinstr :=
     | Assign v a  => RAssign v a
     | Seq i1 i2   => RSeq (while_repeat i1) (while_repeat i2)
     | If b i1 i2  => RIf b (while_repeat i1) (while_repeat i2) 
-    | While b i   => Repeat (while_repeat i) b 
+    | While b i   => RIf b (Repeat (while_repeat i) (Bnot b)) RSkip
     end.
 
 (** Avant d'aborder la preuve suivante, il est recommandé de tester
@@ -889,8 +889,33 @@ Theorem while_repeat_correct :
   forall i s1 s2, SN i s1 s2 -> SNr (while_repeat i) s1 s2.
 Proof.
   intros i s_1 s_2 sn.
-            (** complétez ici NIVEAU 4 *)
-Admitted.
+  induction sn.
+  - cbn. apply SNr_Skip.
+  - cbn. apply SNr_Assign.
+  - cbn. eapply SNr_Seq.
+    + apply IHsn1.
+    + apply IHsn2.
+  - cbn. apply SNr_If_true.
+    + apply H.
+    + apply IHsn.
+  - cbn. apply SNr_If_false.
+    + apply H.
+    + apply IHsn.
+  - cbn. apply SNr_If_false.
+    + apply H.
+    + apply SNr_Skip.
+  - cbn. apply SNr_If_true.
+    + apply H.
+    + inversion IHsn2.
+      * eapply SNr_Repeat_false.
+        -- apply IHsn1.
+        -- cbn. rewrite H5. cbn. reflexivity.
+        -- apply H6.
+      * inversion H3. inversion H6.
+        eapply SNr_Repeat_true.
+        -- rewrite H10 in IHsn1. apply IHsn1.
+        -- cbn. rewrite H10 in H5. rewrite H5. cbn. reflexivity.
+Qed.
 
 (* -------------------------------------------------------------------------- *)
 (** ** Le langage WHILE-REPEAT *)
