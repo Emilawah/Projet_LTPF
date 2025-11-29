@@ -326,22 +326,14 @@ Qed.
 Definition AFAIRE_dessin_reduction1 : unit.
 
 (*
+                 SN Assign 0 (Ir-N1) [1;2] [0;2]    SN Assign 1 (N1+Xr) [0;2] [0;3]
+                  ------------------------------------------------------------------ SN_Seq      evalB ..[0;3] = false
+                                     SN corps [1; 2] [0; 3]                                    --------------------- SN_While_false
+ evalB "i<>0" [1; 2] = true                                                                        SN P1 [0; 3] [0; 3]
 
-
-
-
-
-
-
-
-
-                             SN Assign 0 (Ir-1) [1;2] [0;3]   
-                             -----------------------------------------SN_Seq
- evalB "i<>0" [1; 2] = true          SN corps [1; 2] [0; 3]                                  SN P1 [0; 3] [0; 3]
------------------------------------------------------------------------------------------------------------------- SN_While_true
-                                     SN P1 [1; 2] [0; 3]
-
- *)
+--------------------------------------------------------------------------------------------------------------------- SN_While_true
+                                                    SN P1 [1; 2] [0; 3]
+*)
 Admitted.
 
 (** Une autre présentation de ce script, structurée par accolades.
@@ -970,8 +962,25 @@ Proof.
   - cbn. apply SNr_If_false.
     + apply cond.
     + apply hrec_sn.
-  - cbn. apply inv_Seq in 
-
+  (*cas Repeat : b = false -> on sort de repeat*)  
+  - cbn. apply SNr_If_false.
+    + apply s2.
+    + apply SNr_Skip.
+  (*cas Repeat : b = true -> on repeat*)      
+  - cbn. apply SNr_If_true.
+    + apply sn1.
+    + inversion hrec_sn2.
+      * eapply SNr_Repeat_false.
+        -- apply cond.
+        -- cbn. rewrite H4. cbn. reflexivity.
+        -- apply H5.
+      * inversion H5.
+        apply SNr_Repeat_true.
+        (* s1 = s2 *)
+        -- rewrite <- H8. apply cond.
+        -- cbn. rewrite H8 in H4. rewrite H4. cbn. reflexivity.
+Qed.
+        
 
     
 (* -------------------------------------------------------------------------- *)
