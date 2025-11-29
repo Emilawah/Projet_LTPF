@@ -44,7 +44,6 @@ Une première Grammaire (récursive à gauche indirecte) :
 * **While** ::= 'w' '(' Var ')' '{' Prog '}'<br>
 * **Prog** ::= Instr InstrSuite <br>
 
-
 ### WHILEb
 
 ### 1.1.4 Grammaire pour le langage WHILEb
