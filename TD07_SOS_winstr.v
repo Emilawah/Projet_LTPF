@@ -226,7 +226,7 @@ Proof.
               ** eapply SOS_again.
                  --- apply SOS1_If_true. cbn. reflexivity.
                  --- eapply SOS_again.
-                     +++ apply SOS1_Seqi.apply SOS1_Seqf. apply SOS1_Assign.
+                     +++ apply SOS1_Seqi. apply SOS1_Seqf. apply SOS1_Assign.
                      +++ eapply SOS_again.
                          *** apply SOS1_Seqi. apply SOS1_Seqf. apply SOS1_Assign.
                          *** eapply SOS_again.
@@ -253,6 +253,27 @@ Proof.
     + apply H.
     + apply IHp1. apply p2.
 Qed.
+
+(* Explication :
+
+   - La relation SOS est transitive : si on peut passer d'une
+     configuration c1 à c2 et de c2 a c3, alors on peut passer de c1 à c3
+
+   - Preuve par récurrence sur  :
+     -> cas de base : si c1 = c2 alors on a le chemin de c1 vers c3
+        via p2 (SOS c2 c3)
+     -> cas inductif : Il y a au moins 1 étape (SOS c2 c0)
+        On recolle le premier "pas" (SOS_1 i1 s1 c2) avec le reste
+        (SOS c0 c3 -> SOS c2 c3)
+
+   - SOS_Seq :
+     Si l'éxécution complète de l'instruction i1 à partir de l'état s1
+     termine dans l'état s2, alors l'éxécution de la séquence i1 ; i2
+     à partir de s1 conduit à une configuration intermédiaire ou il reste       à éxécuter l'instruction i2 dans l'état s2.
+
+*)
+
+
 (** Il n'est pas demandé de faire celui-ci
     (bien qu'un copié-collé d'un lemme précédent fonctionne). *)
 Lemma SOS_Pcarre_2_2e_tour : SOS (Inter Pcarre_2 [1; 1; 3]) (Inter Pcarre_2 [2; 4; 5]).
