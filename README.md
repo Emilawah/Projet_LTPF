@@ -47,7 +47,7 @@ Une première Grammaire (récursive à gauche indirecte) :
   * **Assign** ::= Var ':' '=' Expr<br>
   * **If** ::= 'i' '(' Var ')' '{' Prog '}' '{' Prog '}'<br>
   * **While** ::= 'w' '(' Var ')' '{' Prog '}'<br>
-  * **Prog** ::= Instr InstrSuite <br>
+  * **Prog** ::= Instr InstrSuite | epsilon <br>
 
 
 ### WHILEb
@@ -144,7 +144,7 @@ Pour cela, nous pouvons définir une règle `Esp` de notre grammaire en utilisan
 
   * **Instr** ::=  Assign | If | While<br>
   * **InstrSuite** ::= Esp ';' Esp Instr InstrSuite | epsilon<br>
-  * **Assign** ::= Var ':' '=' Expr<br>
+  * **Assign** ::= Var Esp ':' '=' Esp Expr<br>
   * **If** ::= Esp 'i' Esp '(' Esp Var Esp ')' Esp '{' Esp Prog Esp '}' Esp '{' Esp Prog Esp '}' Esp<br>
   * **While** ::= Esp 'w' Esp '(' Esp  Var Esp ')' Esp '{' Esp  Prog Esp '}' Esp<br>
-  * **Prog** ::= Esp Instr InstrSuite Esp <br>
+  * **Prog** ::= Esp Instr InstrSuite Esp | epsilon<br>
