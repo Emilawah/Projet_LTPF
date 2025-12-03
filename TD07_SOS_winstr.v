@@ -556,8 +556,19 @@ puis le théorème désiré sur l'état finant atteint par (Pcarre n).
 
 
 (** ** Définir une version fonctionnelle de SOS_1 *)
-Fixpoint f_SOS_1 (i : winstr) (s : state) : config.
-Admitted.
+Fixpoint f_SOS_1 (i : winstr) (s : state) : config :=
+  match i with
+  |Skip => Final s
+  |Assign x e => Final (update s x (evalA e s))
+  |Seq i1 i2 => match f_SOS_1 i1 s with
+                |Final s1 => Inter i2 s1
+                |Inter i1' s1 => Inter (Seq i1' i2) s1
+                end
+  |If b i1 i2 => if evalB b s then Inter i1 s else Inter i2 s
+  |While b i => Inter (If b (Seq i (While b i)) Skip) s
+  end.
+
+
 
 (** ** Utilisation de f_SOS_1 pour éviter les eapply SOS_again *)
 
@@ -574,22 +585,58 @@ Definition PC1 := If (Bnot (Beqnat Ir (Aco 2))) PC2 Skip.
 Fact fa1 : f_SOS_1 PC0 [0;0;1] = Inter PC1 [0;0;1]. reflexivity. Qed.
 Eval cbn in (f_SOS_1 PC1 [0;0;1]).
 (** Continuer, on retombe sur PC0 après quelques étapes. *)
+Fact fa2 : f_SOS_1 PC1 [0;0;1] = Inter PC2 [0;0;1]. reflexivity. Qed.
+Eval cbn in (f_SOS_1 PC2 [0;0;1]).
+  
+Definition PC3 := Seq (Seq incrX incrY) PC0.
+Fact fa3 : f_SOS_1 PC2 [0;0;1] = Inter PC3 [1;0;1]. reflexivity. Qed.
+Eval cbn in (f_SOS_1 PC3 [1;0;1]).
 
+Definition PC4 := Seq incrY PC0.
+Fact fa4 : f_SOS_1 PC3 [1;0;1] = Inter PC4 [1;1;1]. reflexivity. Qed.
+Eval cbn in (f_SOS_1 PC4 [1;1;1]).
+
+Fact fa5 : f_SOS_1 PC4 [1;1;1] = Inter PC0 [1;1;3]. reflexivity. Qed.
+Eval cbn in (f_SOS_1 PC0 [1;1;3]).
+
+(* On retombe bien sur PC0 comme convenu avec i = x = 1 et y = 3
+   cette fois ci avec 1 tour de boucle de while *)
+
+  
 (** Utilisation sur un lemme SOS *)
 Lemma SOS_Pcarre_2_1er_tour_V1 :
   SOS (Inter Pcarre_2 [0;0;1]) (Inter Pcarre_2 [1; 1; 3]).
 Proof.
   change Pcarre_2 with PC0.
-  apply SOS_again with (Inter PC1 [0;0;1]).
+  apply SOS_again with (Inter PC1 [0;0;1]). 
   { apply SOS1_While. }
-Admitted.
+  apply SOS_again with (f_SOS_1 PC1 [0;0;1]).
+  { cbv. apply SOS1_If_true. cbn. reflexivity. }
+  apply SOS_again with (f_SOS_1 PC2 [0;0;1]).
+  { cbv. apply SOS1_Seqi. apply SOS1_Seqf. apply SOS1_Assign. }
+  apply SOS_again with (f_SOS_1 PC3 [1;0;1]).
+  { cbv. apply SOS1_Seqi. apply SOS1_Seqf. apply SOS1_Assign. }
+  apply SOS_again with (f_SOS_1 PC4 [1;1;1]).
+  { cbv. apply SOS1_Seqf. apply SOS1_Assign. }
+  apply SOS_stop.
+Qed.
 
 (** ** Théorèmes généraux reliant SOS_1 et f_SOS_1 *)
 
 (** Court mais non trivial. *)
 Lemma f_SOS_1_corr : forall i s, SOS_1 i s (f_SOS_1 i s).
 Proof.
-Admitted.
+  intros i s.
+  induction i.
+  - cbn. apply SOS1_Skip.
+  - cbn. apply SOS1_Assign.
+  - cbn. destruct (f_SOS_1 i1 s).
+    { apply SOS1_Seqi. apply IHi1.}
+    apply SOS1_Seqf. apply IHi1.
+  - cbn. destruct (evalB b s).
+    {
+      (*a finir *)
+
 
 (** Court. Attention : utiliser la tactique injection. *)
 Lemma f_SOS_1_compl : forall i s c, SOS_1 i s c -> c = f_SOS_1 i s.
