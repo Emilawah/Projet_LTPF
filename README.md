@@ -148,3 +148,21 @@ Pour cela, nous pouvons définir une règle `Esp` de notre grammaire en utilisan
   * **If** ::= Esp 'i' Esp '(' Esp Var Esp ')' Esp '{' Esp Prog Esp '}' Esp '{' Esp Prog Esp '}' Esp<br>
   * **While** ::= Esp 'w' Esp '(' Esp  Var Esp ')' Esp '{' Esp  Prog Esp '}' Esp<br>
   * **Prog** ::= Esp Instr InstrSuite Esp | epsilon<br>
+
+## 2.2 Éxécution d'un programme WHILEb
+
+Tous les tests du programme WHILEb se trouvent dans le fichier `projet.ml`.
+
+## 2.3 Preuves sur la SN 
+
+Toutes les preuves de SN se trouvent dans le fichier `TD06_SN_winstr.v`.
+
+---
+
+## 3 - Partie optionelle
+
+### 3.1 - Preuves sur la SOS
+
+Toutes les preuves de SOS se trouvent dans le fichier `TD07_SOS_winstr.v`.
+
+
