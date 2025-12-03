@@ -254,7 +254,8 @@ Proof.
     + apply IHp1. apply p2.
 Qed.
 
-(* Explication :
+(* 3.1.1 
+    Explication :
 
    - La relation SOS est transitive : si on peut passer d'une
      configuration c1 à c2 et de c2 a c3, alors on peut passer de c1 à c3
@@ -306,13 +307,13 @@ Qed.
 Theorem SOS_Pcarre_2_fin_V1 : SOS (Inter Pcarre_2 [0;0;1]) (Final [2;4;5]).
 Proof.
   apply SOS_trans with (Inter Pcarre_2 [1; 1; 3]).
-  - eapply SOS_again.
-    + cbv. apply SOS1_While.
-    + eapply SOS_again.
-      * apply SOS1_If_true. cbn. reflexivity.
+  { apply SOS_Pcarre_2_1er_tour. }
+  apply SOS_trans with (Inter Pcarre_2 [2; 4; 5]). 
+  { apply SOS_Pcarre_2_2e_tour. }
+  apply SOS_Pcarre_2_fini.
+Qed.
     
-      
-
+     
 
 (** Généralisation à Pcarre *)
 
@@ -326,7 +327,16 @@ Proof. ring. Qed.
 Definition invar_cc n := [n; n*n; S (n+n)].
 Theorem SOS_corps_carre n : SOS (Inter corps_carre (invar_cc n)) (Final (invar_cc (S n))).
 Proof.
+  eapply SOS_again.
+  { cbv. apply SOS1_Seqf. apply SOS1_Assign.}
+  eapply SOS_again.
+  { apply SOS1_Seqf. apply SOS1_Assign. }
+  eapply SOS_again.
+  { apply SOS1_Assign. }
+  cbn.
 Admitted.
+    
+
 
 (** Celui-ci est court mais difficile. Laisser Admitted au début. *)
 Fixpoint SOS_seqf i1 i2 s1 s2 (so : SOS (Inter i1 s1) (Final s2)) :
@@ -338,25 +348,48 @@ Admitted.
 Lemma SOS_corps_carre_inter n i :
   SOS (Inter (Seq corps_carre i) (invar_cc n)) (Inter i (invar_cc (S n))).
 Proof.
-  apply SOS_seqf.
-Admitted.
+  apply SOS_seqf. apply SOS_corps_carre.
+Qed.
 
 Lemma eqnatb_refl : forall n, eqnatb n n = true.
 Proof.
-Admitted.
+  intro n.
+  induction n.
+  { cbn. reflexivity.}
+  {cbn. apply IHn. }
+Qed.
 
 (** Réutiliser les lemmes précédents (facile). *)
 Lemma SOS_Pcarre_tour :
   forall n i, eqnatb i n = false ->
   SOS (Inter (Pcarre n) (invar_cc i)) (Inter (Pcarre n) (invar_cc (S i))).
 Proof.
-Admitted.
-
+  intros n i p.
+  eapply SOS_again. cbv.
+  { apply SOS1_While. }
+  eapply SOS_again.
+  { apply SOS1_If_true. cbn. rewrite p. cbn. reflexivity. }
+  apply SOS_corps_carre_inter.
+Qed.
+    
+     
+      
 (** Facile *)
 Theorem SOS_Pcarre_n_fini :
   forall n, SOS (Inter (Pcarre n) (invar_cc n)) (Final (invar_cc n)).
 Proof.
-Admitted.
+  intro n.
+  eapply SOS_again. cbv.
+  { apply SOS1_While. }
+  eapply SOS_again.
+  { apply SOS1_If_false. cbn. rewrite eqnatb_refl. cbn. reflexivity. }
+  eapply SOS_again.
+  { apply SOS1_Skip. }
+  apply SOS_stop.
+Qed.
+    
+    
+  
 
 Theorem SOS_Pcarre_2_fin_V2 : SOS (Inter Pcarre_2 [0;0;1]) (Final [2;4;5]).
 Proof.
@@ -372,15 +405,31 @@ Qed.
 (** On peut dire des choses sur la version qui boucle sans fin. *)
 Lemma SOS_Pcarre_inf_tour :
   forall i,
-  SOS (Inter Pcarre_inf (invar_cc i)) (Inter Pcarre_inf (invar_cc (S i))).
+    SOS (Inter Pcarre_inf (invar_cc i)) (Inter Pcarre_inf (invar_cc (S i))).
 Proof.
-Admitted.
+  intro i.
+  eapply SOS_again.
+  {apply SOS1_While. }
+  eapply SOS_again.
+  { apply SOS1_If_true. cbn. reflexivity.}
+  apply SOS_corps_carre_inter.
+Qed.
 
 Theorem SOS_Pcarre_inf_i :
   forall i,
   SOS (Inter Pcarre_inf [0; 0; 1]) (Inter Pcarre_inf (invar_cc i)).
 Proof.
-Admitted.
+  intro i.
+  induction i.
+  (*cas i = 0*)
+  { cbv. apply SOS_stop. }
+  (*cas i = S i*)
+  eapply SOS_trans.
+  { apply IHi.}
+  apply SOS_Pcarre_inf_tour.
+Qed.
+  
+    
 
 (** Énoncer et démontrer le théorème général pour Pcarre (****) *)
 (**
