@@ -214,21 +214,49 @@ let progvertical = "
 
 
 
+let string_of_var = function
+  | A -> "A" | B -> "B" | C -> "C" | D -> "D";;
+
+let string_of_cst = function
+  | Zero -> "Zero" | Un -> "Un";;
+
+let rec string_of_expr = function
+  | EConst c -> "EConst " ^ string_of_cst c
+  | EVar v -> "EVar " ^ string_of_var v
+  | EPlus (e1, e2) -> "EPlus(" ^ string_of_expr e1 ^ ", " ^ string_of_expr e2 ^ ")"
+  | EMult (e1, e2) -> "EMult(" ^ string_of_expr e1 ^ ", " ^ string_of_expr e2 ^ ")"
+  | ENot e -> "ENot(" ^ string_of_expr e ^ ")";;
+
+let rec string_of_instr = function
+  | Skip -> "Skip"
+  | Assign (v, e) -> "Assign(" ^ string_of_var v ^ ", " ^ string_of_expr e ^ ")"
+  | Seq (i1, i2) -> "Seq(" ^ string_of_instr i1 ^ ", " ^ string_of_instr i2 ^ ")"
+  | If (v, i1, i2) -> "If(" ^ string_of_var v ^ ", " ^ string_of_instr i1 ^ ", " ^ string_of_instr i2 ^ ")"
+  | While (v, i) -> "While(" ^ string_of_var v ^ ", " ^ string_of_instr i ^ ")";;
+
+
+  
 
 let test_valid name prog =
     Printf.printf "[TEST VALIDE]   %-10s : " name;
     try
         let (res, reste) = pr2_Prog (list_of_string prog) in
-        if reste = [] then Printf.printf "OK\n"
-        else Printf.printf "FAIL (Reste non parsé: %s)\n" (String.concat "" (List.map (String.make 1) reste))
+        if reste = [] then 
+            (* ICI : On affiche l'AST si le parsing est réussi *)
+            Printf.printf "OK\n    -> AST: %s\n" (string_of_instr res)
+        else 
+            Printf.printf "FAIL (Reste non parsé: %s)\n" (String.concat "" (List.map (String.make 1) reste))
     with Echec -> Printf.printf "FAIL (Exception Echec levée)\n";;
 
 let test_invalid name prog =
     Printf.printf "[TEST INVALIDE] %-10s : " name;
     try
         let (res, reste) = pr2_Prog (list_of_string prog) in
-        if reste <> [] then Printf.printf "OK (Reste détecté)\n"
-        else Printf.printf "FAIL (Le code invalide a été accepté !)\n"
+        if reste <> [] then 
+            Printf.printf "OK (Reste détecté)\n"
+        else 
+            (* Si ça a réussi alors que ça devait rater, on affiche l'AST pour comprendre pourquoi *)
+            Printf.printf "FAIL (Accepté à tort !)\n    -> AST généré: %s\n" (string_of_instr res)
     with Echec -> Printf.printf "OK (Exception Echec levée)\n";;
 
 
