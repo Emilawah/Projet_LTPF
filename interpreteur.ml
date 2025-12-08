@@ -15,7 +15,7 @@ module type etat = sig
 
 end
 
-module Etat : Etat = struct
+module Etat : etat = struct
   type t = var -> int 
 
   let init = fun _ -> 0
@@ -79,4 +79,71 @@ let rec executer (prog:winstr) (s: Etat.t) : Etat.t =
 
 
 
-(* Tests*)
+(* -------------------------------------
+   -               TESTS               -
+   ------------------------------------- *)
+
+print_endline "\n=========================================";;
+print_endline "      TESTS INTERPRETEUR ";;
+print_endline "=========================================\n";;
+
+let print_state (s : Etat.t) (msg : string) =
+  Printf.printf "\n=== %s ===\n" msg;
+  Printf.printf "A = %d\n" (Etat.get s A);
+  Printf.printf "B = %d\n" (Etat.get s B);
+  Printf.printf "C = %d\n" (Etat.get s C);
+  Printf.printf "D = %d\n" (Etat.get s D);
+  print_endline "----------------"
+
+(* Test 1
+   
+   Programme :
+   A := 1;
+   B := 0;
+   i(A) { 
+      C := !B 
+   } { 
+      C := 0 
+   }
+*)
+
+let prog_test1 = 
+  Seq(
+    Assign(A, EConst Un),
+    Seq(
+      Assign(B, EConst Zero),
+      If(A, 
+         Assign(C, ENot(EVar B)), (* Bloc THEN *)
+         Assign(C, EConst Zero)   (* Bloc ELSE *)
+      )
+    )
+  )
+
+let _ = 
+  let s_final = executer prog_test1 Etat.init in
+  print_state s_final "RESULTAT TEST 1 (Attendu: A=1, B=0, C=1)"
+
+
+(*Programme :
+   A := 1;
+   w(A) {
+      B := 1;
+      A := 0
+   }
+*)
+
+let prog_test2 = 
+  Seq(
+    Assign(A, EConst Un),
+    While(A, 
+      Seq(
+        Assign(B, EConst Un),
+        Assign(A, EConst Zero)
+      )
+    )
+  )
+
+let _ = 
+  let s_final = executer prog_test2 Etat.init in
+  print_state s_final "RESULTAT TEST 2 (Attendu: A=0, B=1)"
+

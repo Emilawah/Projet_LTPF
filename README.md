@@ -29,6 +29,9 @@ Date : Novembre/Décembre 2025 <br>
 | **Terminal** | `ocaml` | **Mode Interactif**<br>Ouvre l'invite de commande OCaml (`#`). Utilisez ensuite `#use "fichier.ml";;` pour charger vos fonctions manuellement. |
 
 
+ATTENTION : Si vous exécutez `projet.ml` / `interpreteur.ml` / `tests.ml` en 
+mode interactif, assurez-vous de charger d'abord `analist.ml` et `anacomb.ml` pour éviter les erreurs de dépendance.
+
 **Questions :**
 - Emilio STIEN : 1.1.1 ; 1.1.2 ; 1.1.3 ; 1.1.4 ; 1.2 ; 2.1.1 ; 2.1.2 ; 2.1.3 ; 2.1.4 ; 2.2.1 ; 2.2.2 ; 2.3.1 ; 2.3.2 ; 2.3.3 ; 2.3.4 ; 2.3.5 ; 3.1.1 ; 3.1.2 ; 3.1.3 ; 3.1.4 ; 3.4.1 ; 3.4.2 ; 3.4.3
 - Kelig LE MARREC : 1.1.1 ; 1.1.2 ; 1.1.3 ; 1.1.4 ; 1.2 ; 2.1.1 ; 2.1.2 ; 2.1.3 ; 2.2.1 ; 2.2.2 ; 2.3.1 ; 2.3.2 ; 2.3.3 ; 2.3.4 ; 2.3.5 ; 3.1.1 ; 3.1.2 ; 3.1.3 ; 3.1.4 ; 3.4.1 ; 3.4.2 ; 3.4.3
