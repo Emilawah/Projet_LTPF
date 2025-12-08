@@ -470,7 +470,7 @@ and pr2_If l = l|>  (
   p_esp --> terminal 'i' --> p_esp --> terminal '(' --> p_esp -+> pr_V ++> fun v ->
     p_esp --> terminal ')' --> p_esp --> terminal '{' --> p_esp -+> pr2_Prog ++> fun p1 ->
       p_esp --> terminal '}' --> p_esp --> terminal '{' --> p_esp -+> pr2_Prog ++> fun p2 ->
-        p_esp --> terminal '}' -+> epsilon_res(If(v,p1,p2))
+        p_esp --> terminal '}' --> p_esp -+> epsilon_res(If(v,p1,p2))
 )
 and pr2_While l = l|> (
         p_esp --> terminal 'w' --> p_esp --> terminal '(' --> p_esp -+> pr_V ++> fun v -> 
