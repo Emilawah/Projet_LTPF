@@ -334,7 +334,11 @@ Proof.
   eapply SOS_again.
   { apply SOS1_Assign. }
   cbn.
-Admitted.
+  rewrite <- Sn_carre.
+  rewrite <- Sn_2.
+  apply SOS_stop.
+Qed.
+
     
 
 
@@ -634,7 +638,7 @@ Proof.
     { apply SOS1_Seqi. apply IHi1.}
     apply SOS1_Seqf. apply IHi1.
   - cbn. destruct (evalB b s).
-    {
+
       (*a finir *)
 
 
