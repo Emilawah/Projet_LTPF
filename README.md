@@ -1,9 +1,48 @@
 # Projet_LTPF
 
 Auteur : Emilio STIEN & Kelig LE MARREC <br>
-Date : Novembre 2025 <br>
+Date : Novembre/Décembre 2025 <br>
 
 --- 
+
+**Contenu des fichiers :**
+- `analist.ml` : Analyseur lexical <br>
+- `anacomb.ml` : Analyseur syntaxique combinatoire <br>
+- `projet.ml` : Analyseur syntaxique du langage WHILEb⁻⁻ et WhILEb <br>
+- `tests.ml` : Tests robustes pour l'analyseur syntaxique du langage WHILEb
+- `interpreteur.ml` : Interpréteur du langage WHILEb (execution SOS )<br>
+- SN_If_true.png : Règle de la sémantique naturelle pour If true <br>
+- SN_If_false.png : Règle de la sémantique naturelle pour If false <br>
+- `projet.v` : Preuves Coq sur la SN et sur SOS <br>
+
+
+**Comment éxécuter le projet :**
+1. Cloner le dépôt GitHub :  `git clone https://github.com/Emilawah/Projet_LTPF.git`
+2. Se déplacer dans le dossier du projet : `cd Projet_LTPF/PF/Projet/`
+3. Installer Ocaml et OPAM si ce n'est pas déjà fait.
+4. Exécuter / Tester :
+
+| Environnement | Commande | Action |
+| :--- | :--- | :--- |
+| **Emacs** | `Ctrl-c` `Ctrl-b` | **Évaluer le buffer**<br>Envoie tout le code du fichier ouvert vers le *toplevel* intégré (recommandé pour lancer les tests dans `projet.ml`) |
+| **Terminal** | `ocaml tests.ml` | **Lancer les tests**<br>Charge les dépendances et exécute le fichier de tests complet. |
+| **Terminal** | `ocaml` | **Mode Interactif**<br>Ouvre l'invite de commande OCaml (`#`). Utilisez ensuite `#use "fichier.ml";;` pour charger vos fonctions manuellement. |
+
+
+ATTENTION : Si vous exécutez `projet.ml` / `interpreteur.ml` / `tests.ml` en 
+mode interactif, assurez-vous de charger d'abord `analist.ml` et `anacomb.ml` pour éviter les erreurs de dépendance.
+
+**Questions :**
+- Emilio STIEN : 1.1.1 ; 1.1.2 ; 1.1.3 ; 1.1.4 ; 1.2 ; 2.1.1 ; 2.1.2 ; 2.1.3 ; 2.1.4 ; 2.2.1 ; 2.2.2 ; 2.3.1 ; 2.3.2 ; 2.3.3 ; 2.3.4 ; 2.3.5 ; 3.1.1 ; 3.1.2 ; 3.1.3 ; 3.1.4 ; 3.4.1 ; 3.4.2 ; 3.4.3
+- Kelig LE MARREC : 1.1.1 ; 1.1.2 ; 1.1.3 ; 1.1.4 ; 1.2 ; 2.1.1 ; 2.1.2 ; 2.1.3 ; 2.2.1 ; 2.2.2 ; 2.3.1 ; 2.3.2 ; 2.3.3 ; 2.3.4 ; 2.3.5 ; 3.1.1 ; 3.1.2 ; 3.1.3 ; 3.1.4 ; 3.4.1 ; 3.4.2 ; 3.4.3
+
+<br>
+<br>
+
+NB : a noter que l'implémentation de l'analyseur a été faite avec 2 versions : 
+  - en utilisant les analist en renvoyant la liste "aspirée" (liste de char)
+  - en utilisant les ranalist en revoyant un AST et la liste "aspirée"
+
 
 ## 1 - Préliminiaires théoriques
 
@@ -155,7 +194,7 @@ Tous les tests robustes du programme WHILEb se trouvent dans le fichier `tests.m
 
 ## 2.3 Preuves sur la SN 
 
-Toutes les preuves de SN se trouvent dans le fichier `TD06_SN_winstr.v`.
+Toutes les preuves de SN se trouvent dans le fichier `projet.v`.
 
 ---
 
@@ -163,6 +202,6 @@ Toutes les preuves de SN se trouvent dans le fichier `TD06_SN_winstr.v`.
 
 ### 3.1 - Preuves sur la SOS
 
-Toutes les preuves de SOS se trouvent dans le fichier `TD07_SOS_winstr.v`.
+Toutes les preuves de SOS se trouvent dans le fichier `projet.v`.
 
 
