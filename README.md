@@ -36,6 +36,10 @@ Date : Novembre/Décembre 2025 <br>
 <br>
 <br>
 
+NB : a noter que l'implémentation de l'analyseur a été faite avec 2 versions : 
+  - en utilisant les analist en renvoyant la liste "aspirée" (liste de char)
+  - en utilisant les ranalist en revoyant un AST et la liste "aspirée"
+
 
 ## 1 - Préliminiaires théoriques
 
@@ -187,7 +191,7 @@ Tous les tests robustes du programme WHILEb se trouvent dans le fichier `tests.m
 
 ## 2.3 Preuves sur la SN 
 
-Toutes les preuves de SN se trouvent dans le fichier `TD06_SN_winstr.v`.
+Toutes les preuves de SN se trouvent dans le fichier `projet.v`.
 
 ---
 
@@ -195,6 +199,6 @@ Toutes les preuves de SN se trouvent dans le fichier `TD06_SN_winstr.v`.
 
 ### 3.1 - Preuves sur la SOS
 
-Toutes les preuves de SOS se trouvent dans le fichier `TD07_SOS_winstr.v`.
+Toutes les preuves de SOS se trouvent dans le fichier `projet.v`.
 
 
