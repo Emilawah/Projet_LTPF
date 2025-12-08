@@ -212,32 +212,32 @@ Qed.
 Theorem SOS_Pcarre_2_V0 : SOS (Inter Pcarre_2 [0;0;1]) (Final [2;4;5]).
 Proof.
   eapply SOS_again.
-  - apply SOS1_While.
-  - eapply SOS_again.
-    + apply SOS1_If_true. cbn. reflexivity.
-    + eapply SOS_again.
-      * cbv. apply SOS1_Seqi. apply SOS1_Seqf. apply SOS1_Assign.
-      * eapply SOS_again.
-        -- apply SOS1_Seqi. apply SOS1_Seqf. apply SOS1_Assign.
-        -- eapply SOS_again.
-           ++ apply SOS1_Seqf. apply SOS1_Assign.
-           ++ eapply SOS_again.
-              ** apply SOS1_While.
-              ** eapply SOS_again.
-                 --- apply SOS1_If_true. cbn. reflexivity.
-                 --- eapply SOS_again.
-                     +++ apply SOS1_Seqi. apply SOS1_Seqf. apply SOS1_Assign.
-                     +++ eapply SOS_again.
-                         *** apply SOS1_Seqi. apply SOS1_Seqf. apply SOS1_Assign.
-                         *** eapply SOS_again.
-                             ---- apply SOS1_Seqf. apply SOS1_Assign.
-                             ---- eapply SOS_again.
-                                  ++++ apply SOS1_While.
-                                  ++++ eapply SOS_again.
-                                       **** apply SOS1_If_false. cbn. reflexivity.
-                                       **** eapply SOS_again.
-                                            ----- apply SOS1_Skip.
-                                            ----- eapply SOS_stop.
+  { apply SOS1_While. }
+  eapply SOS_again.
+  { apply SOS1_If_true. cbn. reflexivity. }
+  eapply SOS_again.
+  { cbv. apply SOS1_Seqi. apply SOS1_Seqf. apply SOS1_Assign. }
+  eapply SOS_again.
+  { apply SOS1_Seqi. apply SOS1_Seqf. apply SOS1_Assign. }
+  eapply SOS_again.
+  { apply SOS1_Seqf. apply SOS1_Assign. }
+  eapply SOS_again.
+  { apply SOS1_While. }
+  eapply SOS_again.
+  { apply SOS1_If_true. cbn. reflexivity. }
+  eapply SOS_again.
+  { apply SOS1_Seqi. apply SOS1_Seqf. apply SOS1_Assign. }
+  eapply SOS_again.
+  { apply SOS1_Seqi. apply SOS1_Seqf. apply SOS1_Assign. }
+  eapply SOS_again.
+  { apply SOS1_Seqf. apply SOS1_Assign. }
+  eapply SOS_again.
+  { apply SOS1_While. }
+  eapply SOS_again.
+  { apply SOS1_If_false. cbn. reflexivity. }
+  eapply SOS_again.
+  { apply SOS1_Skip. }
+  apply SOS_stop.
 Qed.
 
 (** Le but de la suite est d'éviter les redites, puis éventuellement
@@ -285,13 +285,12 @@ Qed.
 (** Même énoncé que SOS_Pcarre_2_V0. Utiliser SOS_trans *)
 Theorem SOS_Pcarre_2_fin_V1 : SOS (Inter Pcarre_2 [0;0;1]) (Final [2;4;5]).
 Proof.
-  apply SOS_trans with (Inter Pcarre_2 [1; 1; 3]).
-  - eapply SOS_again.
-    + cbv. apply SOS1_While.
-    + eapply SOS_again.
-      * apply SOS1_If_true. cbn. reflexivity.
-      * 
-Admitted.
+  eapply SOS_trans.
+  { apply SOS_Pcarre_2_1er_tour. }
+  eapply SOS_trans.
+  { apply SOS_Pcarre_2_2e_tour. }
+  apply SOS_Pcarre_2_fini.
+Qed.
 
 (** Généralisation à Pcarre *)
 
@@ -305,6 +304,13 @@ Proof. ring. Qed.
 Definition invar_cc n := [n; n*n; S (n+n)].
 Theorem SOS_corps_carre n : SOS (Inter corps_carre (invar_cc n)) (Final (invar_cc (S n))).
 Proof.
+  eapply SOS_again.
+  { cbv. apply SOS1_Seqf. apply SOS1_Assign. }
+  eapply SOS_again.
+  { apply SOS1_Seqf. apply SOS1_Assign. }
+  eapply SOS_again.
+  { apply SOS1_Assign. }
+  cbn. (* A Finir *)
 Admitted.
 
 (** Celui-ci est court mais difficile. Laisser Admitted au début. *)
@@ -318,24 +324,43 @@ Lemma SOS_corps_carre_inter n i :
   SOS (Inter (Seq corps_carre i) (invar_cc n)) (Inter i (invar_cc (S n))).
 Proof.
   apply SOS_seqf.
-Admitted.
+  apply SOS_corps_carre.
+Qed.
 
 Lemma eqnatb_refl : forall n, eqnatb n n = true.
 Proof.
-Admitted.
+  intro n.
+  induction n.
+  - cbn. reflexivity.
+  - cbn. apply IHn.
+Qed.
 
 (** Réutiliser les lemmes précédents (facile). *)
 Lemma SOS_Pcarre_tour :
   forall n i, eqnatb i n = false ->
   SOS (Inter (Pcarre n) (invar_cc i)) (Inter (Pcarre n) (invar_cc (S i))).
 Proof.
-Admitted.
+  intros n i expr.
+  eapply SOS_again. cbv.
+  { apply SOS1_While. }
+  eapply SOS_again.
+  { apply SOS1_If_true. cbn. rewrite expr. cbn. reflexivity. }
+  apply SOS_corps_carre_inter.
+Qed.
 
 (** Facile *)
 Theorem SOS_Pcarre_n_fini :
   forall n, SOS (Inter (Pcarre n) (invar_cc n)) (Final (invar_cc n)).
 Proof.
-Admitted.
+  intro n.
+  eapply SOS_again. cbv.
+  { apply SOS1_While. }
+  eapply SOS_again.
+  { apply SOS1_If_false. cbn. rewrite eqnatb_refl. cbn. reflexivity. }
+  eapply SOS_again.
+  { apply SOS1_Skip. }
+  apply SOS_stop.
+Qed.
 
 Theorem SOS_Pcarre_2_fin_V2 : SOS (Inter Pcarre_2 [0;0;1]) (Final [2;4;5]).
 Proof.
@@ -353,12 +378,28 @@ Lemma SOS_Pcarre_inf_tour :
   forall i,
   SOS (Inter Pcarre_inf (invar_cc i)) (Inter Pcarre_inf (invar_cc (S i))).
 Proof.
-Admitted.
+  intro i.
+  eapply SOS_again.
+  { apply SOS1_While. }
+  eapply SOS_again.
+  { apply SOS1_If_true. cbn. reflexivity. }
+  apply SOS_corps_carre_inter.
+Qed.
 
 Theorem SOS_Pcarre_inf_i :
   forall i,
   SOS (Inter Pcarre_inf [0; 0; 1]) (Inter Pcarre_inf (invar_cc i)).
 Proof.
+  intro i.
+  eapply SOS_again. cbv.
+  { apply SOS1_While. }
+  eapply SOS_again.
+  { apply SOS1_If_true. cbn. reflexivity. }
+  eapply SOS_again.
+  { apply SOS1_Seqi. apply SOS1_Seqf. apply SOS1_Assign. }
+  eapply SOS_again.
+  { apply SOS1_Seqi. apply SOS1_Seqf. apply SOS1_Assign. }
+  
 Admitted.
 
 (** Énoncer et démontrer le théorème général pour Pcarre (****) *)
