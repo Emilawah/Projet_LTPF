@@ -178,6 +178,7 @@ Definition Pcarre n := While (Bnot (Beqnat Ir (Aco n))) corps_carre.
 (** Nouveau : on peut jouer avec des programmes qui bouclent *)
 Definition Pcarre_inf := While Btrue corps_carre.
 
+
 Lemma SOS_Pcarre_2_1er_tour : SOS (Inter Pcarre_2 [0;0;1]) (Inter Pcarre_2 [1; 1; 3]).
 Proof.
   eapply SOS_again.
@@ -192,6 +193,10 @@ Proof.
            ++ apply SOS1_Seqf. apply SOS1_Assign.
            ++ apply SOS_stop.
 Qed.
+
+(** Ce théorème montre qu'une seule itération de la boucle infinie Pcarre_inf, 
+    partant de l'état initial [0; 0; 1], aboutit à la même instruction de boucle 
+    mais avec l'état mis à jour [1; 1; 3]. *)
 
 Theorem SOS_Pcarre_inf_1er_tour : SOS (Inter Pcarre_inf [0;0;1]) (Inter Pcarre_inf [1; 1; 3]).
 Proof.
@@ -277,6 +282,8 @@ Qed.
 
 (** Il n'est pas demandé de faire celui-ci
     (bien qu'un copié-collé d'un lemme précédent fonctionne). *)
+
+
 Lemma SOS_Pcarre_2_2e_tour : SOS (Inter Pcarre_2 [1; 1; 3]) (Inter Pcarre_2 [2; 4; 5]).
 Proof.
   eapply SOS_again.
@@ -292,6 +299,11 @@ Proof.
            ++ apply SOS_stop.
 Qed.
 
+
+(** Ce théorème signifie que lorsque la condition d'arrêt est atteinte (ici i=2), 
+    la condition de la boucle devient fausse et le programme Pcarre_2 s'arrête 
+    immédiatement dans l'état courant [2; 4; 5]. *)
+
 Theorem SOS_Pcarre_2_fini : SOS (Inter Pcarre_2 [2; 4; 5]) (Final [2; 4; 5]).
 Proof.
   eapply SOS_again.
@@ -303,7 +315,9 @@ Proof.
       * apply SOS_stop.
 Qed.
 
-(** Même énoncé que SOS_Pcarre_2_V0. Utiliser SOS_trans *)
+(** Même énoncé que SOS_Pcarre_2_V0. Utiliser SOS_trans
+    On utilise les lemmes précédents :
+    1er tour -> transition -> 2eme tour -> transition -> etape finale -> bingo*)
 Theorem SOS_Pcarre_2_fin_V1 : SOS (Inter Pcarre_2 [0;0;1]) (Final [2;4;5]).
 Proof.
   eapply SOS_trans.
@@ -323,6 +337,9 @@ Lemma Sn_carre n : S n * S n = S (n + n + n * n).
 Proof. ring. Qed.
 
 Definition invar_cc n := [n; n*n; S (n+n)].
+
+(** Ce théorème montre que l'exécution du corps de la boucle met à jour l'invariant : 
+    il transforme un état où (i = n) et (x = n^2) en un état où (i = n+1) et (x = (n+1)^2). *)
 Theorem SOS_corps_carre n : SOS (Inter corps_carre (invar_cc n)) (Final (invar_cc (S n))).
 Proof.
   eapply SOS_again.
@@ -341,12 +358,21 @@ Qed.
 
 
 (** Celui-ci est court mais difficile. Laisser Admitted au début. *)
+
+(** Ce lemme exprime la sémantique de la séquence : si l'exécution complète de i1 
+    transforme l'état s1 en s2, alors l'exécution de la séquence (i1; i2) mène à 
+    une configuration intermédiaire où il reste à exécuter i2 dans l'état s2. *)
+
 Fixpoint SOS_seqf i1 i2 s1 s2 (so : SOS (Inter i1 s1) (Final s2)) :
   SOS (Inter (Seq i1 i2) s1) (Inter i2 s2).
 Proof.
 Admitted.
 
 (** Réutiliser les lemmes précédents (facile et très court). *)
+
+(** Ce lemme technique indique que si l'on exécute le corps de la boucle suivi 
+    d'une instruction i, on aboutit à l'instruction i avec l'état mis à jour au rang S n. *)
+
 Lemma SOS_corps_carre_inter n i :
   SOS (Inter (Seq corps_carre i) (invar_cc n)) (Inter i (invar_cc (S n))).
 Proof.
@@ -362,6 +388,10 @@ Proof.
 Qed.
 
 (** Réutiliser les lemmes précédents (facile). *)
+
+(** Ce théorème signifie que tant que la condition d'arrêt n'est pas atteinte (i != n), 
+    l'exécution de (Pcarre n) effectue un tour complet et revient au début de la boucle 
+    avec l'invariant incrémenté (passage de i à S i). *)
 Lemma SOS_Pcarre_tour :
   forall n i, eqnatb i n = false ->
   SOS (Inter (Pcarre n) (invar_cc i)) (Inter (Pcarre n) (invar_cc (S i))).
@@ -375,6 +405,10 @@ Proof.
 Qed.
 
 (** Facile *)
+
+(** Ce théorème prouve la terminaison du programme : lorsque l'invariant atteint 
+    la valeur cible n (l'état invar_cc n), la condition de boucle devient fausse 
+    et le programme s'arrête (Final). *)
 Theorem SOS_Pcarre_n_fini :
   forall n, SOS (Inter (Pcarre n) (invar_cc n)) (Final (invar_cc n)).
 Proof.
@@ -388,6 +422,9 @@ Proof.
   apply SOS_stop.
 Qed.
 
+(** Cette preuve démontre la terminaison complète du programme en utilisant la transitivité 
+    de la relation SOS. Elle décompose l'exécution en enchaînant les étapes successives : 
+    premier tour, deuxième tour, puis l'étape finale d'arrêt définies au dessus *)
 Theorem SOS_Pcarre_2_fin_V2 : SOS (Inter Pcarre_2 [0;0;1]) (Final [2;4;5]).
 Proof.
   eapply SOS_trans.
@@ -400,6 +437,10 @@ Proof.
 Qed.
 
 (** On peut dire des choses sur la version qui boucle sans fin. *)
+
+(** Ce théorème indique que pour la version infinie (condition toujours vraie), 
+    chaque exécution effectue un tour de boucle faisant passer l'état du rang i 
+    au rang S i, revenant ensuite au début de la boucle. *)
 Lemma SOS_Pcarre_inf_tour :
   forall i,
   SOS (Inter Pcarre_inf (invar_cc i)) (Inter Pcarre_inf (invar_cc (S i))).
@@ -409,9 +450,13 @@ Proof.
   { apply SOS1_While. }
   eapply SOS_again.
   { apply SOS1_If_true. cbn. reflexivity. }
-  apply SOS_corps_carre_inter.
+  apply SOS_corps_carre_inter. (*et on rapelle ce lemme encore...*)
 Qed.
 
+
+(** Ce théorème généralise l'exécution de la boucle infinie : il montre qu'en partant 
+    de l'état initial, il est possible d'atteindre n'importe quel état correspondant 
+    à l'invariant au rang i après un certain nombre de pas. *)
 Theorem SOS_Pcarre_inf_i :
   forall i,
   SOS (Inter Pcarre_inf [0; 0; 1]) (Inter Pcarre_inf (invar_cc i)).
@@ -633,7 +678,7 @@ Proof.
   - cbn. destruct (evalB b s).
 
       (*a finir *)
-
+Admitted.
 
 (** Court. Attention : utiliser la tactique injection. *)
 Lemma f_SOS_1_compl : forall i s c, SOS_1 i s c -> c = f_SOS_1 i s.
