@@ -926,6 +926,12 @@ Qed.
 (* Sémantique petit pas                      *)
 (* Structural Operational Semantics (SOS)    *)
 
+
+(* On importe les bibliothèques de Coq utiles pour le TD   *)
+
+Require Import Bool Arith List.
+Import List.ListNotations.
+
 (** * SOS (Sémantique opérationnelle à petits pas) du langage While *)
 
 Inductive config :=
@@ -1489,16 +1495,7 @@ Qed.
 (** Court. Attention : utiliser la tactique injection. *)
 Lemma f_SOS_1_compl : forall i s c, SOS_1 i s c -> c = f_SOS_1 i s.
 Proof.
-  intros i s c H.
-  induction H; cbn.
-  - reflexivity.
-  - reflexivity.
-  - rewrite <- IHSOS_1. reflexivity.
-  - rewrite <- IHSOS_1. reflexivity.
-  - rewrite H. reflexivity.
-  - rewrite H. reflexivity.  
-  - reflexivity.
-Qed.
+Admitted.
 
 
 
