@@ -911,10 +911,10 @@ Proof.
         -- apply IHsn1.
         -- cbn. rewrite H5. cbn. reflexivity.
         -- apply H6.
-      * inversion H3. inversion H6.
+      * inversion H6.
         eapply SNr_Repeat_true.
-        -- rewrite H10 in IHsn1. apply IHsn1.
-        -- cbn. rewrite H10 in H5. rewrite H5. cbn. reflexivity.
+        -- rewrite H9 in IHsn1. apply IHsn1.
+        -- cbn. rewrite H9 in H5. rewrite H5. cbn. reflexivity.
 Qed.
 
 (* -------------------------------------------------------------------------- *)
