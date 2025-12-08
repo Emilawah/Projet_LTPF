@@ -1,9 +1,41 @@
 # Projet_LTPF
 
 Auteur : Emilio STIEN & Kelig LE MARREC <br>
-Date : Novembre 2025 <br>
+Date : Novembre/Décembre 2025 <br>
 
 --- 
+
+**Contenu des fichiers :**
+- `analist.ml` : Analyseur lexical <br>
+- `anacomb.ml` : Analyseur syntaxique combinatoire <br>
+- `projet.ml` : Analyseur syntaxique du langage WHILEb⁻⁻ et WhILEb <br>
+- `tests.ml` : Tests robustes pour l'analyseur syntaxique du langage WHILEb
+- `interpreteur.ml` : Interpréteur du langage WHILEb (execution SOS )<br>
+- SN_If_true.png : Règle de la sémantique naturelle pour If true <br>
+- SN_If_false.png : Règle de la sémantique naturelle pour If false <br>
+- `projet.v` : Preuves Coq sur la SN et sur SOS <br>
+
+
+**Comment éxécuter le projet :**
+1. Cloner le dépôt GitHub :  `git clone https://github.com/Emilawah/Projet_LTPF.git`
+2. Se déplacer dans le dossier du projet : `cd Projet_LTPF/PF/Projet/`
+3. Installer Ocaml et OPAM si ce n'est pas déjà fait.
+4. Exécuter / Tester :
+
+| Environnement | Commande | Action |
+| :--- | :--- | :--- |
+| **Emacs** | `Ctrl-c` `Ctrl-b` | **Évaluer le buffer**<br>Envoie tout le code du fichier ouvert vers le *toplevel* intégré (recommandé pour lancer les tests dans `projet.ml`) |
+| **Terminal** | `ocaml tests.ml` | **Lancer les tests**<br>Charge les dépendances et exécute le fichier de tests complet. |
+| **Terminal** | `ocaml` | **Mode Interactif**<br>Ouvre l'invite de commande OCaml (`#`). Utilisez ensuite `#use "fichier.ml";;` pour charger vos fonctions manuellement. |
+
+
+**Questions :**
+- Emilio STIEN : 1.1.1 ; 1.1.2 ; 1.1.3 ; 1.1.4 ; 1.2 ; 2.1.1 ; 2.1.2 ; 2.1.3 ; 2.1.4 ; 2.2.1 ; 2.2.2 ; 2.3.1 ; 2.3.2 ; 2.3.3 ; 2.3.4 ; 2.3.5 ; 3.1.1 ; 3.1.2 ; 3.1.3 ; 3.1.4 ; 3.4.1 ; 3.4.2 ; 3.4.3
+- Kelig LE MARREC : 1.1.1 ; 1.1.2 ; 1.1.3 ; 1.1.4 ; 1.2 ; 2.1.1 ; 2.1.2 ; 2.1.3 ; 2.2.1 ; 2.2.2 ; 2.3.1 ; 2.3.2 ; 2.3.3 ; 2.3.4 ; 2.3.5 ; 3.1.1 ; 3.1.2 ; 3.1.3 ; 3.1.4 ; 3.4.1 ; 3.4.2 ; 3.4.3
+
+<br>
+<br>
+
 
 ## 1 - Préliminiaires théoriques
 
